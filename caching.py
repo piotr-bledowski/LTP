@@ -13,7 +13,10 @@ def try_loading_cached_features(
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
     jaccard_index: bool = False,
+    adjusted_rand: bool = False,
+    adamic_adar: bool = False,
     local_degree_score: bool = False,
+    local_similarity_score: bool = False
 ) -> Optional[pd.DataFrame]:
     if not os.path.exists(FEATURES_CACHE_DIR):
         return None
@@ -24,7 +27,10 @@ def try_loading_cached_features(
         shortest_paths,
         edge_betweenness,
         jaccard_index,
+        adjusted_rand,
+        adamic_adar,
         local_degree_score,
+        local_similarity_score
     )
     filepath = FEATURES_CACHE_DIR / filename
 
@@ -41,7 +47,10 @@ def cache_features(
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
     jaccard_index: bool = False,
+    adjusted_rand: bool = False,
+    adamic_adar: bool = False,
     local_degree_score: bool = False,
+    local_similarity_score: bool = False
 ) -> None:
     FEATURES_CACHE_DIR.mkdir(exist_ok=True)
 
@@ -51,7 +60,10 @@ def cache_features(
         shortest_paths,
         edge_betweenness,
         jaccard_index,
+        adjusted_rand,
+        adamic_adar,
         local_degree_score,
+        local_similarity_score
     )
     filepath = FEATURES_CACHE_DIR / filename
 
@@ -66,7 +78,10 @@ def _get_file_name(
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
     jaccard_index: bool = False,
+    adjusted_rand: bool = False,
+    adamic_adar: bool = False,
     local_degree_score: bool = False,
+    local_similarity_score: bool = False
 ) -> str:
     filename = "_".join(
         [
@@ -75,7 +90,10 @@ def _get_file_name(
             str(int(shortest_paths)),
             str(int(edge_betweenness)),
             str(int(jaccard_index)),
+            str(int(adjusted_rand)),
+            str(int(adamic_adar)),
             str(int(local_degree_score)),
+            str(int(local_similarity_score))
         ]
     )
     return f"{filename}.zst"

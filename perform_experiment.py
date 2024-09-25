@@ -18,7 +18,10 @@ def perform_experiment(
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
     jaccard_index: bool = False,
+    adjusted_rand: bool = False,
+    adamic_adar: bool = False,
     local_degree_score: bool = False,
+    local_similarity_score: bool = False,
     n_bins: int = 50,
     normalization: str = "none",
     aggregation: str = "histogram",
@@ -38,7 +41,10 @@ def perform_experiment(
             shortest_paths=shortest_paths,
             edge_betweenness=edge_betweenness,
             jaccard_index=jaccard_index,
+            adjusted_rand=adjusted_rand,
+            adamic_adar=adamic_adar,
             local_degree_score=local_degree_score,
+            local_similarity_score=local_similarity_score
         )
     else:
         features = None
@@ -50,7 +56,10 @@ def perform_experiment(
             shortest_paths=shortest_paths,
             edge_betweenness=edge_betweenness,
             jaccard_index=jaccard_index,
+            adjusted_rand=adjusted_rand,
+            adamic_adar=adamic_adar,
             local_degree_score=local_degree_score,
+            local_similarity_score=local_similarity_score,
             verbose=verbose,
         )
 
@@ -62,7 +71,10 @@ def perform_experiment(
             shortest_paths=shortest_paths,
             edge_betweenness=edge_betweenness,
             jaccard_index=jaccard_index,
+            adjusted_rand=adjusted_rand,
+            adamic_adar=adamic_adar,
             local_degree_score=local_degree_score,
+            local_similarity_score=local_similarity_score
         )
 
     y = np.array(dataset.data.y)

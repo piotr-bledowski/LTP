@@ -7,6 +7,11 @@ from typing import Union
 from data_loading import DATASET_NAMES
 from perform_experiment import perform_experiment
 
+import time
+import wandb
+
+wandb.init()
+
 # the only warning raised is ConvergenceWarning for linear SVM, which is
 # acceptable (max_iter is already higher than default); unfortunately, we
 # have to do this globally for all warnings to affect child processes in
@@ -154,6 +159,7 @@ if __name__ == "__main__":
         datasets = [args.dataset_name]
 
     for dataset_name in DATASET_NAMES:
+        start = time.time()
         print(dataset_name)
         acc_mean, acc_stddev = perform_experiment(
             dataset_name=dataset_name,
@@ -173,3 +179,11 @@ if __name__ == "__main__":
             verbose=args.verbose,
         )
         print(f"Accuracy: {100 * acc_mean:.2f} +- {100 * acc_stddev:.2f}")
+        total_time = float(int((time.time() - start)*100))/100
+        print(f'time: {total_time}')
+        wandb.log(data={
+            'dataset': dataset_name,
+            'acc_mean': float(int(acc_mean*100))/100,
+            'acc_std': float(int(acc_stddev*100))/100,
+            'time': total_time
+        })

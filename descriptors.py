@@ -1,9 +1,15 @@
 import numpy as np
 from networkit.centrality import Betweenness
-from networkit.distance import APSP
+from networkit.distance import APSP, AlgebraicDistance
 from networkit.graph import Graph
-from networkit.linkprediction import JaccardIndex
-from networkit.sparsification import LocalDegreeScore
+from networkit.linkprediction import JaccardIndex, AdjustedRandIndex, AdamicAdarIndex
+from networkit.sparsification import LocalDegreeScore, LocalSimilarityScore, TriangleEdgeScore
+
+
+def get_triangles(G: Graph):
+    edge_triangles = TriangleEdgeScore(G)
+    edge_triangles.run()
+    return edge_triangles.scores()
 
 
 def calculate_shortest_paths(graph: Graph) -> np.array:
@@ -40,8 +46,32 @@ def calculate_jaccard_index(graph: Graph) -> np.ndarray:
     return scores
 
 
+def calculate_adjusted_rand_index(graph: Graph) -> np.ndarray:
+    adjusted_rand_index = AdjustedRandIndex(graph)
+    scores = [adjusted_rand_index.run(u, v) for u, v in graph.iterEdges()]
+    scores = np.array(scores, dtype=np.float32)
+    scores = scores[np.isfinite(scores)]
+    return scores
+
+
+def calculate_adamic_adar_index(graph: Graph) -> np.ndarray:
+    adamic_adar_index = AdamicAdarIndex(graph)
+    scores = [adamic_adar_index.run(u, v) for u, v in graph.iterEdges()]
+    scores = np.array(scores, dtype=np.float32)
+    scores = scores[np.isfinite(scores)]
+    return scores
+
+
 def calculate_local_degree_score(graph: Graph) -> np.ndarray:
     local_degree_score = LocalDegreeScore(graph)
     local_degree_score.run()
     scores = local_degree_score.scores()
     return np.array(scores, dtype=np.float32)
+
+
+def calculate_local_similarity_score(graph: Graph) -> np.ndarray:
+    lss = LocalSimilarityScore(graph, get_triangles(graph))
+    lss.run()
+    scores = lss.scores()
+    return np.array(scores, dtype=np.float32)
+

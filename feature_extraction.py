@@ -20,7 +20,10 @@ from descriptors import (
     calculate_shortest_paths,
     calculate_edge_betweenness,
     calculate_jaccard_index,
+    calculate_adjusted_rand_index,
+    calculate_adamic_adar_index,
     calculate_local_degree_score,
+    calculate_local_similarity_score,
 )
 
 
@@ -30,7 +33,10 @@ def _extract_single_graph_features(
     shortest_paths: bool,
     edge_betweenness: bool,
     jaccard_index: bool,
+    adjusted_rand: bool,
+    adamic_adar: bool,
     local_degree_score: bool,
+    local_similarity_score: bool,
 ) -> np.array:
     # adapted from PyTorch Geometric
     row, col = data.edge_index
@@ -64,7 +70,10 @@ def _extract_single_graph_features(
             shortest_paths,
             edge_betweenness,
             jaccard_index,
+            adjusted_rand,
+            adamic_adar,
             local_degree_score,
+            local_similarity_score,
         ]
     ):
         graph = torch_geometric.utils.to_networkx(data, to_undirected=True)
@@ -83,9 +92,21 @@ def _extract_single_graph_features(
         ji = calculate_jaccard_index(graph)
         ldp_features.append(ji)
 
+    if adjusted_rand:
+        ar = calculate_adjusted_rand_index(graph)
+        ldp_features.append(ar)
+
+    if adamic_adar:
+        aa = calculate_adamic_adar_index(graph)
+        ldp_features.append(aa)
+
     if local_degree_score:
         lds = calculate_local_degree_score(graph)
         ldp_features.append(lds)
+
+    if local_similarity_score:
+        lss = calculate_local_similarity_score(graph)
+        ldp_features.append(lss)
 
     # make sure that all features have the same dtype
     ldp_features = [feature.astype(np.float32) for feature in ldp_features]
@@ -99,7 +120,10 @@ def extract_features(
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
     jaccard_index: bool = False,
+    adjusted_rand: bool = False,
+    adamic_adar: bool = False,
     local_degree_score: bool = False,
+    local_similarity_score: bool = False,
     verbose: bool = False,
 ) -> pd.DataFrame:
     """
@@ -121,7 +145,10 @@ def extract_features(
             shortest_paths,
             edge_betweenness,
             jaccard_index,
+            adjusted_rand,
+            adamic_adar,
             local_degree_score,
+            local_similarity_score,
         )
         for data in iterable
     ]
@@ -141,8 +168,14 @@ def extract_features(
         columns.append("edge_betweenness")
     if jaccard_index:
         columns.append("jaccard_index")
+    if adjusted_rand:
+        columns.append("adjusted_rand_index")
+    if adamic_adar:
+        columns.append("adamic_adar_index")
     if local_degree_score:
         columns.append("local_degree_score")
+    if local_similarity_score:
+        columns.append("local_similarity_score")
 
     return pd.DataFrame(data, columns=columns)
 
