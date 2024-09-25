@@ -161,4 +161,6 @@ def perform_experiment(
         'time': round(total_time, 2),
     })
 
+    wandb.finish()
+
     return acc_mean, acc_stddev
