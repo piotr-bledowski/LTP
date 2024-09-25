@@ -39,7 +39,8 @@ def perform_experiment(
         name=f'{dataset_name}{"_sp" if shortest_paths else ""}{"_eb" if edge_betweenness else ""}'
              f'{"_ji" if jaccard_index else ""}{"_ar" if adjusted_rand else ""}{"_aa" if adamic_adar else ""}'
              f'{"_lds" if local_degree_score else ""}{"_lss" if local_similarity_score else ""}',
-        project='LTP'
+        project='LTP',
+        group=dataset_name
     )
 
     start = time.time()
