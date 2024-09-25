@@ -30,7 +30,7 @@ def ensure_bool(data: Union[bool, str]) -> bool:
         raise argparse.ArgumentTypeError("Boolean value expected")
 
 def descriptor_combinations(num_descriptors: int = 7):
-    return list(itertools.product([True, False], repeat=num_descriptors))
+    return list(itertools.product([True, False], repeat=num_descriptors))[::-1]
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Local Topological Profile")
