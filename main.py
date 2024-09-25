@@ -8,9 +8,7 @@ from data_loading import DATASET_NAMES
 from perform_experiment import perform_experiment
 
 import time
-import wandb
-
-wandb.init()
+import itertools
 
 # the only warning raised is ConvergenceWarning for linear SVM, which is
 # acceptable (max_iter is already higher than default); unfortunately, we
@@ -31,6 +29,8 @@ def ensure_bool(data: Union[bool, str]) -> bool:
     else:
         raise argparse.ArgumentTypeError("Boolean value expected")
 
+def descriptor_combinations(num_descriptors: int = 7):
+    return list(itertools.product([True, False], repeat=num_descriptors))
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser("Local Topological Profile")
@@ -158,32 +158,38 @@ if __name__ == "__main__":
     else:
         datasets = [args.dataset_name]
 
+    descriptors = descriptor_combinations(num_descriptors=7)
+
     for dataset_name in DATASET_NAMES:
-        start = time.time()
-        print(dataset_name)
-        acc_mean, acc_stddev = perform_experiment(
-            dataset_name=dataset_name,
-            degree_sum=args.degree_sum,
-            shortest_paths=args.shortest_paths,
-            edge_betweenness=args.edge_betweenness,
-            jaccard_index=args.jaccard_index,
-            local_degree_score=args.local_degree_score,
-            n_bins=args.n_bins,
-            normalization=args.normalization,
-            aggregation=args.aggregation,
-            log_degree=args.log_degree,
-            model_type=args.model_type,
-            tune_feature_extraction_hyperparams=args.tune_feature_extraction_hyperparams,
-            tune_model_hyperparams=args.tune_model_hyperparams,
-            use_features_cache=args.use_features_cache,
-            verbose=args.verbose,
-        )
-        print(f"Accuracy: {100 * acc_mean:.2f} +- {100 * acc_stddev:.2f}")
-        total_time = float(int((time.time() - start)*100))/100
-        print(f'time: {total_time}')
-        wandb.log(data={
-            'dataset': dataset_name,
-            'acc_mean': float(int(acc_mean*100))/100,
-            'acc_std': float(int(acc_stddev*100))/100,
-            'time': total_time
-        })
+        for descriptor_combination in descriptors:
+            start = time.time()
+            print(dataset_name)
+            acc_mean, acc_stddev = perform_experiment(
+                dataset_name=dataset_name,
+                degree_sum=args.degree_sum,
+                shortest_paths=descriptor_combination[0],
+                edge_betweenness=descriptor_combination[1],
+                jaccard_index=descriptor_combination[2],
+                adjusted_rand=descriptor_combination[3],
+                adamic_adar=descriptor_combination[4],
+                local_degree_score=descriptor_combination[5],
+                local_similarity_score=descriptor_combination[6],
+                n_bins=args.n_bins,
+                normalization=args.normalization,
+                aggregation=args.aggregation,
+                log_degree=args.log_degree,
+                model_type=args.model_type,
+                tune_feature_extraction_hyperparams=args.tune_feature_extraction_hyperparams,
+                tune_model_hyperparams=args.tune_model_hyperparams,
+                use_features_cache=args.use_features_cache,
+                verbose=args.verbose,
+            )
+            print(f"Accuracy: {100 * acc_mean:.2f} +- {100 * acc_stddev:.2f}")
+            total_time = float(int((time.time() - start)*100))/100
+            print(f'time: {total_time}')
+            # wandb.log(data={
+            #     'dataset': dataset_name,
+            #     'acc_mean': float(int(acc_mean*100))/100,
+            #     'acc_std': float(int(acc_stddev*100))/100,
+            #     'time': total_time
+            # })
