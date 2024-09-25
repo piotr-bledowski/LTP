@@ -11,6 +11,9 @@ from feature_extraction_hyperparams_tuning import (
 )
 from models import get_model
 
+import time
+import wandb
+
 
 def perform_experiment(
     dataset_name: str,
@@ -32,6 +35,15 @@ def perform_experiment(
     use_features_cache: bool = True,
     verbose: bool = False,
 ):
+    wandb.init(
+        name=f'{dataset_name}{"_sp" if shortest_paths else ""}{"_eb" if edge_betweenness else ""}'
+             f'{"_ji" if jaccard_index else ""}{"_ar" if adjusted_rand else ""}{"_aa" if adamic_adar else ""}'
+             f'{"_lds" if local_degree_score else ""}{"_lss" if local_similarity_score else ""}',
+        project='LTP'
+    )
+
+    start = time.time()
+
     dataset = load_dataset(dataset_name)
 
     if use_features_cache:
@@ -141,5 +153,12 @@ def perform_experiment(
 
     acc_mean = np.mean(test_metrics)
     acc_stddev = np.std(test_metrics)
+    total_time = time.time() - start
+
+    wandb.log({
+        'acc_mean': acc_mean,
+        'acc_std': acc_stddev,
+        'time': round(total_time, 2),
+    })
 
     return acc_mean, acc_stddev
