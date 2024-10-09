@@ -166,7 +166,7 @@ if __name__ == "__main__":
         datasets = [args.dataset_name]
 
     sweep_configuration = {
-        'method': 'bayes',
+        'method': 'random',
         'metric': {'name': 'acc_mean', 'goal': 'maximize'},
         'parameters': {
             'dataset_name': {'value': "DD"},
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     }
 
     sweep_id = wandb.sweep(sweep_configuration, project="LTP")
-    wandb.agent(sweep_id, function=run_experiment)  # TODO add count
+    wandb.agent(sweep_id, function=run_experiment, count=10)
 
 
     # for dataset_name in DATASET_NAMES:
