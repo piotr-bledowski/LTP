@@ -170,26 +170,26 @@ if __name__ == "__main__":
         'metric': {'name': 'acc_mean', 'goal': 'maximize'},
         'parameters': {
             'dataset_name': {'value': "DD"},
-            'degree_sum': {'values': [True, False]},
-            'shortest_paths': {'values': [True, False]},
-            'edge_betweenness': {'values': [True, False]},
-            'degree_centrality': {'values': [True, False]},
-            'closeness': {'values': [True, False]},
-            'local_clustering_coefficient': {'values': [True, False]},
-            'pagerank': {'values': [True, False]},
-            'eigenvector_centrality': {'values': [True, False]},
-            'algebraic_distance': {'values': [True, False]},
-            'diameter': {'values': [True, False]},
-            'density': {'values': [True, False]},
-            'preferential_attachment': {'values': [True, False]},
-            'common_neighbor': {'values': [True, False]},
-            'katz_index': {'values': [True, False]},
-            'jaccard_index': {'values': [True, False]},
-            'adjusted_rand': {'values': [True, False]},
-            'adamic_adar': {'values': [True, False]},
-            'local_degree_score': {'values': [True, False]},
-            'local_similarity_score': {'values': [True, False]},
-            'scan': {'values': [True, False]},
+            'degree_sum': {'values': [1, 0]},
+            'shortest_paths': {'values': [1, 0]},
+            'edge_betweenness': {'values': [1, 0]},
+            'degree_centrality': {'values': [1, 0]},
+            'closeness': {'values': [1, 0]},
+            'local_clustering_coefficient': {'values': [1, 0]},
+            'pagerank': {'values': [1, 0]},
+            'eigenvector_centrality': {'values': [1, 0]},
+            'algebraic_distance': {'values': [1, 0]},
+            'diameter': {'values': [1, 0]},
+            'density': {'values': [1, 0]},
+            'preferential_attachment': {'values': [1, 0]},
+            'common_neighbor': {'values': [1, 0]},
+            'katz_index': {'values': [1, 0]},
+            'jaccard_index': {'values': [1, 0]},
+            'adjusted_rand': {'values': [1, 0]},
+            'adamic_adar': {'values': [1, 0]},
+            'local_degree_score': {'values': [1, 0]},
+            'local_similarity_score': {'values': [1, 0]},
+            'scan': {'values': [1, 0]},
             'n_bins': {'values': [args.n_bins]},
             'normalization': {'values': [args.normalization]},
             'aggregation': {'values': [args.aggregation]},
@@ -199,7 +199,7 @@ if __name__ == "__main__":
     }
 
     sweep_id = wandb.sweep(sweep_configuration, project="LTP")
-    wandb.agent(sweep_id, function=run_experiment, count=10)
+    wandb.agent(sweep_id, function=run_experiment, count=1000)
 
 
     # for dataset_name in DATASET_NAMES:
