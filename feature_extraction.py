@@ -16,15 +16,7 @@ from torch_scatter import (
 )
 from tqdm import tqdm
 
-from descriptors import (
-    calculate_shortest_paths,
-    calculate_edge_betweenness,
-    calculate_jaccard_index,
-    calculate_adjusted_rand_index,
-    calculate_adamic_adar_index,
-    calculate_local_degree_score,
-    calculate_local_similarity_score,
-)
+from descriptors import *
 
 
 def _extract_single_graph_features(
@@ -32,11 +24,23 @@ def _extract_single_graph_features(
     degree_sum: bool,
     shortest_paths: bool,
     edge_betweenness: bool,
+    degree_centrality: bool,
+    closeness: bool,
+    local_clustering_coefficient: bool,
+    pagerank: bool,
+    eigenvector_centrality: bool,
+    algebraic_distance: bool,
+    diameter: bool,
+    density: bool,
+    preferential_attachment: bool,
+    common_neighbor: bool,
+    katz_index: bool,
     jaccard_index: bool,
     adjusted_rand: bool,
     adamic_adar: bool,
     local_degree_score: bool,
     local_similarity_score: bool,
+    scan: bool
 ) -> np.array:
     # adapted from PyTorch Geometric
     row, col = data.edge_index
@@ -69,11 +73,23 @@ def _extract_single_graph_features(
         [
             shortest_paths,
             edge_betweenness,
+            degree_centrality,
+            closeness,
+            local_clustering_coefficient,
+            pagerank,
+            eigenvector_centrality,
+            algebraic_distance,
+            diameter,
+            density,
+            preferential_attachment,
+            common_neighbor,
+            katz_index,
             jaccard_index,
             adjusted_rand,
             adamic_adar,
             local_degree_score,
             local_similarity_score,
+            scan
         ]
     ):
         graph = torch_geometric.utils.to_networkx(data, to_undirected=True)
@@ -87,6 +103,50 @@ def _extract_single_graph_features(
     if edge_betweenness:
         eb = calculate_edge_betweenness(graph)
         ldp_features.append(eb)
+
+    if degree_centrality:
+        dc = calculate_degree_centrality(graph)
+        ldp_features.append(dc)
+
+    if closeness:
+        c = calculate_closeness(graph)
+        ldp_features.append(c)
+
+    if local_clustering_coefficient:
+        lcc = calculate_local_clustering_coefficient(graph)
+        ldp_features.append(lcc)
+
+    if pagerank:
+        pr = calculate_pagerank(graph)
+        ldp_features.append(pr)
+
+    if eigenvector_centrality:
+        ec = calculate_eigenvector_centrality(graph)
+        ldp_features.append(ec)
+
+    if algebraic_distance:
+        ad = calculate_algebraic_distance(graph)
+        ldp_features.append(ad)
+
+    if diameter:
+        d = calculate_diameter(graph)
+        ldp_features.append(d)
+
+    if density:
+        d = calculate_density(graph)
+        ldp_features.append(d)
+
+    if preferential_attachment:
+        pa = calculate_preferential_attachment_index(graph)
+        ldp_features.append(pa)
+
+    if common_neighbor:
+        cn = calculate_common_neighbor_index(graph)
+        ldp_features.append(cn)
+
+    if katz_index:
+        ki = calculate_katz_index(graph)
+        ldp_features.append(ki)
 
     if jaccard_index:
         ji = calculate_jaccard_index(graph)
@@ -108,6 +168,10 @@ def _extract_single_graph_features(
         lss = calculate_local_similarity_score(graph)
         ldp_features.append(lss)
 
+    if scan:
+        scan = calculate_scan(graph)
+        ldp_features.append(scan)
+
     # make sure that all features have the same dtype
     ldp_features = [feature.astype(np.float32) for feature in ldp_features]
 
@@ -119,11 +183,23 @@ def extract_features(
     degree_sum: bool = False,
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
+    degree_centrality: bool = False,
+    closeness: bool = False,
+    local_clustering_coefficient: bool = False,
+    pagerank: bool = False,
+    eigenvector_centrality: bool = False,
+    algebraic_distance: bool = False,
+    diameter: bool = False,
+    density: bool = False,
+    preferential_attachment: bool = False,
+    common_neighbor: bool = False,
+    katz_index: bool = False,
     jaccard_index: bool = False,
     adjusted_rand: bool = False,
     adamic_adar: bool = False,
     local_degree_score: bool = False,
     local_similarity_score: bool = False,
+    scan: bool = False,
     verbose: bool = False,
 ) -> pd.DataFrame:
     """
@@ -144,11 +220,23 @@ def extract_features(
             degree_sum,
             shortest_paths,
             edge_betweenness,
+            degree_centrality,
+            closeness,
+            local_clustering_coefficient,
+            pagerank,
+            eigenvector_centrality,
+            algebraic_distance,
+            diameter,
+            density,
+            preferential_attachment,
+            common_neighbor,
+            katz_index,
             jaccard_index,
             adjusted_rand,
             adamic_adar,
             local_degree_score,
             local_similarity_score,
+            scan,
         )
         for data in iterable
     ]
@@ -166,6 +254,28 @@ def extract_features(
         columns.append("shortest_paths")
     if edge_betweenness:
         columns.append("edge_betweenness")
+    if degree_centrality:
+        columns.append("degree_centrality")
+    if closeness:
+        columns.append("closeness")
+    if local_clustering_coefficient:
+        columns.append("local_clustering_coefficient")
+    if pagerank:
+        columns.append("pagerank")
+    if eigenvector_centrality:
+        columns.append("eigenvector_centrality")
+    if algebraic_distance:
+        columns.append("algebraic_distance")
+    if diameter:
+        columns.append("diameter")
+    if density:
+        columns.append("density")
+    if preferential_attachment:
+        columns.append("preferential_attachment")
+    if common_neighbor:
+        columns.append("common_neighbor")
+    if katz_index:
+        columns.append("katz_index")
     if jaccard_index:
         columns.append("jaccard_index")
     if adjusted_rand:
@@ -176,6 +286,8 @@ def extract_features(
         columns.append("local_degree_score")
     if local_similarity_score:
         columns.append("local_similarity_score")
+    if scan:
+        columns.append("scan_structural_similarity_score")
 
     return pd.DataFrame(data, columns=columns)
 
