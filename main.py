@@ -5,6 +5,7 @@ import time
 import warnings
 from typing import Union
 import wandb
+import optuna
 
 from data_loading import DATASET_NAMES
 from perform_experiment import perform_experiment
@@ -147,59 +148,59 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_experiment(config=None):
-    with wandb.init(config=config):
-        config = wandb.config
+def run_experiment(trial):
+    config = {
+        'dataset_name': trial.suggest_categorical("dataset_name", ["DD"]),
+        'degree_sum': trial.suggest_categorical("degree_sum", [1, 0]),
+        'shortest_paths': trial.suggest_categorical("shortest_paths", [1, 0]),
+        'edge_betweenness': trial.suggest_categorical("edge_betweenness", [1, 0]),
+        'degree_centrality': trial.suggest_categorical("degree_centrality", [1, 0]),
+        'closeness': trial.suggest_categorical("closeness", [1, 0]),
+        'local_clustering_coefficient': trial.suggest_categorical("local_clustering_coefficient", [1, 0]),
+        'pagerank': trial.suggest_categorical("pagerank", [1, 0]),
+        'eigenvector_centrality': trial.suggest_categorical("eigenvector_centrality", [1, 0]),
+        'algebraic_distance': trial.suggest_categorical("algebraic_distance", [1, 0]),
+        'diameter': trial.suggest_categorical("diameter", [1, 0]),
+        'density': trial.suggest_categorical("density", [1, 0]),
+        'preferential_attachment': trial.suggest_categorical("preferential_attachment", [1, 0]),
+        'common_neighbor': trial.suggest_categorical("common_neighbor", [1, 0]),
+        'katz_index': trial.suggest_categorical("katz_index", [1, 0]),
+        'jaccard_index': trial.suggest_categorical("jaccard_index", [1, 0]),
+        'adjusted_rand': trial.suggest_categorical("adjusted_rand", [1, 0]),
+        'adamic_adar': trial.suggest_categorical("adamic_adar", [1, 0]),
+        'local_degree_score': trial.suggest_categorical("local_degree_score", [1, 0]),
+        'local_similarity_score': trial.suggest_categorical("local_similarity_score", [1, 0]),
+        'scan': trial.suggest_categorical("scan", [1, 0]),
+        'n_bins': trial.suggest_categorical("n_bins", [args.n_bins]),
+        'normalization': trial.suggest_categorical("normalization", [args.normalization]),
+        'aggregation': trial.suggest_categorical("aggregation", [args.aggregation]),
+        'log_degree': trial.suggest_categorical("log_degree", [args.log_degree]),
+        'model_type': trial.suggest_categorical("model_type", [args.model_type])
+    }
+
+    with wandb.init(config=config, project="LTP"):
         acc_mean, acc_stddev = perform_experiment(**config)
+
         wandb.log({
             'acc_mean': acc_mean,
             'acc_std': acc_stddev,
         })
 
+        return acc_mean
+
+def objective(trial):
+    return run_experiment(trial)
 
 if __name__ == "__main__":
     args = parse_args()
 
-    if args.dataset_name == "all":
-        datasets = DATASET_NAMES
-    else:
-        datasets = [args.dataset_name]
+    study = optuna.create_study(direction='maximize')
 
-    sweep_configuration = {
-        'method': 'random',
-        'metric': {'name': 'acc_mean', 'goal': 'maximize'},
-        'parameters': {
-            'dataset_name': {'value': "DD"},
-            'degree_sum': {'values': [1, 0]},
-            'shortest_paths': {'values': [1, 0]},
-            'edge_betweenness': {'values': [1, 0]},
-            'degree_centrality': {'values': [1, 0]},
-            'closeness': {'values': [1, 0]},
-            'local_clustering_coefficient': {'values': [1, 0]},
-            'pagerank': {'values': [1, 0]},
-            'eigenvector_centrality': {'values': [1, 0]},
-            'algebraic_distance': {'values': [1, 0]},
-            'diameter': {'values': [1, 0]},
-            'density': {'values': [1, 0]},
-            'preferential_attachment': {'values': [1, 0]},
-            'common_neighbor': {'values': [1, 0]},
-            'katz_index': {'values': [1, 0]},
-            'jaccard_index': {'values': [1, 0]},
-            'adjusted_rand': {'values': [1, 0]},
-            'adamic_adar': {'values': [1, 0]},
-            'local_degree_score': {'values': [1, 0]},
-            'local_similarity_score': {'values': [1, 0]},
-            'scan': {'values': [1, 0]},
-            'n_bins': {'values': [args.n_bins]},
-            'normalization': {'values': [args.normalization]},
-            'aggregation': {'values': [args.aggregation]},
-            'log_degree': {'values': [args.log_degree]},
-            'model_type': {'values': [args.model_type]},
-        }
-    }
+    study.optimize(objective, n_trials=100)
 
-    sweep_id = wandb.sweep(sweep_configuration, project="LTP")
-    wandb.agent(sweep_id, function=run_experiment, count=1000)
+    best_trial = study.best_trial
+    print(f"Best trial: {best_trial.params}")
+    print(f"Best acc_mean: {best_trial.value}")
 
 
     # for dataset_name in DATASET_NAMES:
