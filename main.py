@@ -190,14 +190,9 @@ def run_experiment(trial, dataset_name):
 def objective(trial):
     full_acc_mean = []
     for dataset in [
-        "DD",
-        "NCI1",
-        "PROTEINS_full",
         "ENZYMES",
         "IMDB-BINARY",
         "IMDB-MULTI",
-        "REDDIT-BINARY",
-        "REDDIT-MULTI-5K",
         "COLLAB",
     ]:
         full_acc_mean.append(run_experiment(trial, dataset))
