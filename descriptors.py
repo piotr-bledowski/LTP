@@ -1,11 +1,14 @@
 import numpy as np
-from networkit.centrality import Betweenness, DegreeCentrality, Closeness, LocalClusteringCoefficient, PageRank, EigenvectorCentrality
+from networkit.centrality import Betweenness, DegreeCentrality, Closeness, LocalClusteringCoefficient, PageRank,\
+    EigenvectorCentrality, KatzCentrality, LaplacianCentrality, LocalSquareClusteringCoefficient, DynBetweenness, \
+    HarmonicCloseness
 from networkit.distance import APSP, AlgebraicDistance, Diameter
 from networkit.graph import Graph
 from networkit.linkprediction import JaccardIndex, AdjustedRandIndex, AdamicAdarIndex, CommonNeighborsIndex, KatzIndex, PreferentialAttachmentIndex
 from networkit.sparsification import LocalDegreeScore, LocalSimilarityScore, TriangleEdgeScore, SCANStructuralSimilarityScore
 from networkit.graphtools import GraphTools
-
+from networkx.algorithms.centrality import edge_current_flow_betweenness_centrality, communicability_betweenness_centrality, subgraph_centrality, estrada_index
+from networkx.algorithms.distance_measures import radius, eccentricity, periphery
 
 def get_triangles(G: Graph):
     edge_triangles = TriangleEdgeScore(G)
