@@ -203,7 +203,9 @@ def objective(trial):
 if __name__ == "__main__":
     args = parse_args()
 
-    study = optuna.create_study(direction='maximize')
+    sampler = optuna.samplers.TPESampler()
+
+    study = optuna.create_study(direction='maximize', sampler=sampler)
 
     study.optimize(objective, n_trials=100)
 
