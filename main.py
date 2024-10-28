@@ -1,13 +1,12 @@
 import argparse
 import os
 import sys
-import time
 import warnings
 from typing import Union
-import wandb
+
 import optuna
 
-from data_loading import DATASET_NAMES
+import wandb
 from perform_experiment import perform_experiment
 
 # the only warning raised is ConvergenceWarning for linear SVM, which is
@@ -148,12 +147,12 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_experiment(trial):
+def run_experiment(trial, dataset_name):
     config = {
-        'dataset_name': trial.suggest_categorical("dataset_name", ["DD"]),
+        'dataset_name': dataset_name,
         'degree_sum': trial.suggest_categorical("degree_sum", [1, 0]),
         'shortest_paths': trial.suggest_categorical("shortest_paths", [1, 0]),
-        'edge_betweenness': trial.suggest_categorical("edge_betweenness", [1, 0]),
+        'edge_betweenness': trial.suggest_categorical("edge_betweenness", [1]),
         'degree_centrality': trial.suggest_categorical("degree_centrality", [1, 0]),
         'closeness': trial.suggest_categorical("closeness", [1, 0]),
         'local_clustering_coefficient': trial.suggest_categorical("local_clustering_coefficient", [1, 0]),
@@ -185,11 +184,21 @@ def run_experiment(trial):
             'acc_mean': acc_mean,
             'acc_std': acc_stddev,
         })
+    return acc_mean
 
-        return acc_mean
 
 def objective(trial):
+    for dataset in [
+        "all",
+        "DD",
+        "NCI1",
+        "PROTEINS_full",
+        "ENZYMES",
+        "IMDB-BINARY",
+        "IMDB-MULTI"]:
+        run_experiment(trial, dataset)
     return run_experiment(trial)
+
 
 if __name__ == "__main__":
     args = parse_args()
@@ -201,30 +210,3 @@ if __name__ == "__main__":
     best_trial = study.best_trial
     print(f"Best trial: {best_trial.params}")
     print(f"Best acc_mean: {best_trial.value}")
-
-
-    # for dataset_name in DATASET_NAMES:
-    #     for descriptor_combination in descriptors:
-    #         start = time.time()
-    #         print(dataset_name)
-    #         acc_mean, acc_stddev = perform_experiment(
-    #             dataset_name=dataset_name,
-    #             degree_sum=args.degree_sum,
-    #             shortest_paths=descriptor_combination[0],
-    #             edge_betweenness=descriptor_combination[1],
-    #             jaccard_index=descriptor_combination[2],
-    #             adjusted_rand=descriptor_combination[3],
-    #             adamic_adar=descriptor_combination[4],
-    #             local_degree_score=descriptor_combination[5],
-    #             local_similarity_score=descriptor_combination[6],
-    #             n_bins=args.n_bins,
-    #             normalization=args.normalization,
-    #             aggregation=args.aggregation,
-    #             log_degree=args.log_degree,
-    #             model_type=args.model_type,
-    #             tune_feature_extraction_hyperparams=args.tune_feature_extraction_hyperparams,
-    #             tune_model_hyperparams=args.tune_model_hyperparams,
-    #             use_features_cache=args.use_features_cache,
-    #             verbose=args.verbose,
-    #         )
-

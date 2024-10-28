@@ -1,0 +1,13 @@
+--find-links https://download.pytorch.org/whl/cu121
+torch
+torch_geometric
+numpy==1.26.4
+networkit
+networkx
+optuna
+pandas
+scikit-learn
+torch_scatter
+tqdm
+wandb
+zstd
