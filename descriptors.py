@@ -47,14 +47,14 @@ def calculate_eigenvector_centrality(graph: Graph) -> np.array:
 
 
 def calculate_algebraic_distance(graph: Graph) -> np.array:
-    ad = AlgebraicDistance(graph).getEdgeScores()
+    ad = AlgebraicDistance(graph, withEdgeScores=True).getEdgeScores()
     scores = np.array(ad, dtype=np.float32)
     return scores
 
 
 def calculate_diameter(graph: Graph) -> np.array:
-    pr = Diameter(graph).run()
-    return pr
+    d = Diameter(graph).run().getDiameter()
+    return np.array(d, dtype=np.float32)
 
 
 def calculate_common_neighbor_index(graph: Graph) -> np.array:
@@ -84,7 +84,7 @@ def calculate_scan(graph: Graph) -> np.array:
 def calculate_density(graph: Graph) -> np.array:
     gt = GraphTools()
     d = gt.density(graph)
-    return d
+    return np.array([d], dtype=np.float32)
 
 
 def calculate_shortest_paths(graph: Graph) -> np.array:

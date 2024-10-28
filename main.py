@@ -154,7 +154,7 @@ def run_experiment(trial, dataset_name):
         'shortest_paths': trial.suggest_categorical("shortest_paths", [1, 0]),
         'edge_betweenness': trial.suggest_categorical("edge_betweenness", [1]),
         'degree_centrality': trial.suggest_categorical("degree_centrality", [1, 0]),
-        'closeness': trial.suggest_categorical("closeness", [1, 0]),
+        #'closeness': trial.suggest_categorical("closeness", [1, 0]),
         'local_clustering_coefficient': trial.suggest_categorical("local_clustering_coefficient", [1, 0]),
         'pagerank': trial.suggest_categorical("pagerank", [1, 0]),
         'eigenvector_centrality': trial.suggest_categorical("eigenvector_centrality", [1, 0]),
@@ -189,13 +189,13 @@ def run_experiment(trial, dataset_name):
 
 def objective(trial):
     for dataset in [
-        "all",
+        #"all",
         "DD",
         "NCI1",
         "PROTEINS_full",
-        "ENZYMES",
-        "IMDB-BINARY",
-        "IMDB-MULTI"]:
+        "REDDIT-BINARY",
+        "REDDIT-MULTI-5K"
+    ]:
         run_experiment(trial, dataset)
     return run_experiment(trial)
 
