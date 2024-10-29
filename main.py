@@ -3,10 +3,9 @@ import os
 import sys
 import warnings
 from typing import Union
-
 import optuna
-
 import wandb
+import pickle
 from perform_experiment import perform_experiment
 
 # the only warning raised is ConvergenceWarning for linear SVM, which is
@@ -187,27 +186,44 @@ def run_experiment(trial, dataset_name):
     return acc_mean
 
 
-def objective(trial):
-    full_acc_mean = []
-    for dataset in [
-        "ENZYMES",
-        "IMDB-BINARY",
-        "IMDB-MULTI",
-        "COLLAB",
-    ]:
-        full_acc_mean.append(run_experiment(trial, dataset))
-    return sum(full_acc_mean) / len(full_acc_mean)
+def objective(trial, dataset):
+    # Run the experiment for a specific trial and dataset
+    acc_mean = run_experiment(trial, dataset)
+    return acc_mean
 
 
 if __name__ == "__main__":
     args = parse_args()
 
-    sampler = optuna.samplers.TPESampler()
+    datasets = [
+        "DD",
+        "NCI1",
+        "PROTEINS_full",
+        "REDDIT-BINARY",
+        "REDDIT-MULTI-5K"
+    ]
 
-    study = optuna.create_study(direction='maximize', sampler=sampler)
+    best_trials = {}
 
-    study.optimize(objective, n_trials=100)
+    for dataset in datasets:
+        print(f"Starting study for dataset: {dataset}")
 
-    best_trial = study.best_trial
-    print(f"Best trial: {best_trial.params}")
-    print(f"Best acc_mean: {best_trial.value}")
+        sampler = optuna.samplers.TPESampler()
+        study = optuna.create_study(direction='maximize', sampler=sampler)
+
+        study.optimize(lambda trial: objective(trial, dataset), n_trials=100)
+
+        best_trials[dataset] = {
+            'params': study.best_trial.params,
+            'acc_mean': study.best_trial.value
+        }
+
+        print(f"Best trial for {dataset}: {study.best_trial.params}")
+        print(f"Best acc_mean for {dataset}: {study.best_trial.value}")
+
+    print("\nSummary of best trials for all datasets:")
+    for dataset, result in best_trials.items():
+        print(f"{dataset}: Best params = {result['params']}, Best acc_mean = {result['acc_mean']}")
+
+    with open(os.path.join('results', 'results.pkl'), 'wb') as f:
+        pickle.dump(best_trials, f)
