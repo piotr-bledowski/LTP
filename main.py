@@ -2,12 +2,13 @@ import argparse
 import os
 import sys
 import warnings
+from pathlib import Path
 from typing import Union
-import optuna
-import wandb
-import pickle
-from perform_experiment import perform_experiment
+import matplotlib.pyplot as plt
 
+from data_loading import DATASET_NAMES
+from perform_experiment import perform_experiment
+import pandas as pd
 # the only warning raised is ConvergenceWarning for linear SVM, which is
 # acceptable (max_iter is already higher than default); unfortunately, we
 # have to do this globally for all warnings to affect child processes in
@@ -146,84 +147,47 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
-def run_experiment(trial, dataset_name):
-    config = {
-        'dataset_name': dataset_name,
-        'degree_sum': trial.suggest_categorical("degree_sum", [1, 0]),
-        'shortest_paths': trial.suggest_categorical("shortest_paths", [1, 0]),
-        'edge_betweenness': trial.suggest_categorical("edge_betweenness", [1]),
-        'degree_centrality': trial.suggest_categorical("degree_centrality", [1, 0]),
-        #'closeness': trial.suggest_categorical("closeness", [1, 0]),
-        'local_clustering_coefficient': trial.suggest_categorical("local_clustering_coefficient", [1, 0]),
-        'pagerank': trial.suggest_categorical("pagerank", [1, 0]),
-        'eigenvector_centrality': trial.suggest_categorical("eigenvector_centrality", [1, 0]),
-        'algebraic_distance': trial.suggest_categorical("algebraic_distance", [1, 0]),
-        'diameter': trial.suggest_categorical("diameter", [1, 0]),
-        'density': trial.suggest_categorical("density", [1, 0]),
-        'preferential_attachment': trial.suggest_categorical("preferential_attachment", [1, 0]),
-        'common_neighbor': trial.suggest_categorical("common_neighbor", [1, 0]),
-        'katz_index': trial.suggest_categorical("katz_index", [1, 0]),
-        'jaccard_index': trial.suggest_categorical("jaccard_index", [1, 0]),
-        'adjusted_rand': trial.suggest_categorical("adjusted_rand", [1, 0]),
-        'adamic_adar': trial.suggest_categorical("adamic_adar", [1, 0]),
-        'local_degree_score': trial.suggest_categorical("local_degree_score", [1, 0]),
-        'local_similarity_score': trial.suggest_categorical("local_similarity_score", [1, 0]),
-        'scan': trial.suggest_categorical("scan", [1, 0]),
-        'n_bins': trial.suggest_categorical("n_bins", [args.n_bins]),
-        'normalization': trial.suggest_categorical("normalization", [args.normalization]),
-        'aggregation': trial.suggest_categorical("aggregation", [args.aggregation]),
-        'log_degree': trial.suggest_categorical("log_degree", [args.log_degree]),
-        'model_type': trial.suggest_categorical("model_type", [args.model_type])
-    }
-
-    with wandb.init(config=config, project="LTP"):
-        acc_mean, acc_stddev = perform_experiment(**config)
-
-        wandb.log({
-            'acc_mean': acc_mean,
-            'acc_std': acc_stddev,
-        })
-    return acc_mean
-
-
-def objective(trial, dataset):
-    # Run the experiment for a specific trial and dataset
-    acc_mean = run_experiment(trial, dataset)
-    return acc_mean
-
-
 if __name__ == "__main__":
+    plots_dir = Path("plots") / "feature_importance"
+    plots_dir.mkdir(parents=True, exist_ok=True)
     args = parse_args()
+    plots_dir = Path("plots") / "feature_importance"
+    plots_dir.mkdir(parents=True, exist_ok=True)
 
-    datasets = [
-        "DD",
-        "NCI1",
-        "PROTEINS_full",
-        "REDDIT-BINARY",
-        "REDDIT-MULTI-5K"
-    ]
+    datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI']
+    all_feature_importances = []
 
-    best_trials = {}
+    for dataset_name in datasets:
+        print(dataset_name)
+        importances = perform_experiment(
+            dataset_name=dataset_name,
+            verbose=False,
+            degree_sum=True,
+            shortest_paths=True,
+            edge_betweenness=True,
+            degree_centrality=True,
+            local_clustering_coefficient=True,
+            pagerank=True,
+            eigenvector_centrality=True,
+            algebraic_distance=True,
+            diameter=True,
+            density=True,
+            preferential_attachment=True,
+            common_neighbor=True,
+            katz_index=True,
+            jaccard_index=True,
+            adjusted_rand=True,
+            adamic_adar=True,
+            local_degree_score=True,
+            local_similarity_score=True,
+            scan=True,
+            plots_dir=plots_dir
+        )
+        all_feature_importances.append(importances)
 
-    for dataset in datasets:
-        print(f"Starting study for dataset: {dataset}")
-
-        sampler = optuna.samplers.TPESampler()
-        study = optuna.create_study(direction='maximize', sampler=sampler)
-
-        study.optimize(lambda trial: objective(trial, dataset), n_trials=100)
-
-        best_trials[dataset] = {
-            'params': study.best_trial.params,
-            'acc_mean': study.best_trial.value
-        }
-
-        print(f"Best trial for {dataset}: {study.best_trial.params}")
-        print(f"Best acc_mean for {dataset}: {study.best_trial.value}")
-
-    print("\nSummary of best trials for all datasets:")
-    for dataset, result in best_trials.items():
-        print(f"{dataset}: Best params = {result['params']}, Best acc_mean = {result['acc_mean']}")
-
-    with open(os.path.join('results', 'results.pkl'), 'wb') as f:
-        pickle.dump(best_trials, f)
+    df = pd.concat(all_feature_importances, ignore_index=True)
+    df = pd.DataFrame(df.mean(axis=0)).transpose()
+    df.index = [""]
+    df.plot.bar(rot=0)
+    plt.tight_layout()
+    plt.savefig(plots_dir / "average.pdf")
