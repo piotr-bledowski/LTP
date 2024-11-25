@@ -154,12 +154,12 @@ if __name__ == "__main__":
     plots_dir = Path("plots") / "feature_importance"
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI']
+    datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
     all_feature_importances = []
 
     for dataset_name in datasets:
         print(dataset_name)
-        importances = perform_experiment(
+        acc_mean, acc_std = perform_experiment(
             dataset_name=dataset_name,
             verbose=False,
             degree_sum=True,
@@ -183,11 +183,12 @@ if __name__ == "__main__":
             scan=True,
             plots_dir=plots_dir
         )
-        all_feature_importances.append(importances)
+        #all_feature_importances.append(importances)
 
-    df = pd.concat(all_feature_importances, ignore_index=True)
-    df = pd.DataFrame(df.mean(axis=0)).transpose()
-    df.index = [""]
-    df.plot.bar(rot=0)
-    plt.tight_layout()
-    plt.savefig(plots_dir / "average.pdf")
+    #df = pd.concat(all_feature_importances, ignore_index=True)
+    #df = pd.DataFrame(df.mean(axis=0)).transpose()
+    #df.index = [""]
+    #df.to_pickle(plots_dir / "average_df.pkl")
+    #df.plot.bar(rot=0)
+    #plt.tight_layout()
+    #plt.savefig(plots_dir / "average.pdf")

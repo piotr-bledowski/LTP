@@ -13,7 +13,7 @@ from models import get_model
 import pandas as pd
 
 
-def perform_experiment(
+def perform_experiment_calculate_importance(
         dataset_name: str,
         degree_sum: bool = False,
         shortest_paths: bool = False,
@@ -253,6 +253,10 @@ def perform_experiment(
     importances.columns = columns
     importances.index = [""]
 
+    filename = dataset_name.removeprefix("ogbg-mol")
+
+    importances.to_pickle(plots_dir / f'{filename}.pkl')
+
     plt.figure(figsize=(12, 8))  # Adjust these values as needed
 
     ax = importances.plot.bar(rot=0)
@@ -263,7 +267,172 @@ def perform_experiment(
 
     plt.subplots_adjust(right=0.75)
 
-    filename = dataset_name.removeprefix("ogbg-mol")
     plt.savefig(plots_dir / f"{filename}.pdf", bbox_inches='tight', dpi=300)
 
     return importances
+
+
+def perform_experiment(
+        dataset_name: str,
+        degree_sum: bool = False,
+        shortest_paths: bool = False,
+        edge_betweenness: bool = False,
+        degree_centrality: bool = False,
+        closeness: bool = False,
+        local_clustering_coefficient: bool = False,
+        pagerank: bool = False,
+        eigenvector_centrality: bool = False,
+        algebraic_distance: bool = False,
+        diameter: bool = False,
+        density: bool = False,
+        preferential_attachment: bool = False,
+        common_neighbor: bool = False,
+        katz_index: bool = False,
+        jaccard_index: bool = False,
+        adjusted_rand: bool = False,
+        adamic_adar: bool = False,
+        local_degree_score: bool = False,
+        local_similarity_score: bool = False,
+        scan: bool = False,
+        n_bins: int = 50,
+        normalization: str = "none",
+        aggregation: str = "histogram",
+        log_degree: bool = False,
+        model_type: str = "RandomForest",
+        use_features_cache: bool = True,
+        verbose: bool = False,
+        plots_dir: str = "plots"
+):
+    start = time.time()
+
+    dataset = load_dataset(dataset_name)
+
+    if use_features_cache:
+        features = try_loading_cached_features(
+            dataset_name,
+            degree_sum=degree_sum,
+            shortest_paths=shortest_paths,
+            edge_betweenness=edge_betweenness,
+            degree_centrality=degree_centrality,
+            closeness=closeness,
+            local_clustering_coefficient=local_clustering_coefficient,
+            pagerank=pagerank,
+            eigenvector_centrality=eigenvector_centrality,
+            algebraic_distance=algebraic_distance,
+            diameter=diameter,
+            density=density,
+            preferential_attachment=preferential_attachment,
+            common_neighbor=common_neighbor,
+            katz_index=katz_index,
+            jaccard_index=jaccard_index,
+            adjusted_rand=adjusted_rand,
+            adamic_adar=adamic_adar,
+            local_degree_score=local_degree_score,
+            local_similarity_score=local_similarity_score,
+            scan=scan
+        )
+    else:
+        features = None
+
+    if not use_features_cache or features is None:
+        features = extract_features(
+            dataset,
+            degree_sum=degree_sum,
+            shortest_paths=shortest_paths,
+            edge_betweenness=edge_betweenness,
+            degree_centrality=degree_centrality,
+            closeness=closeness,
+            local_clustering_coefficient=local_clustering_coefficient,
+            pagerank=pagerank,
+            eigenvector_centrality=eigenvector_centrality,
+            algebraic_distance=algebraic_distance,
+            diameter=diameter,
+            density=density,
+            preferential_attachment=preferential_attachment,
+            common_neighbor=common_neighbor,
+            katz_index=katz_index,
+            jaccard_index=jaccard_index,
+            adjusted_rand=adjusted_rand,
+            adamic_adar=adamic_adar,
+            local_degree_score=local_degree_score,
+            local_similarity_score=local_similarity_score,
+            scan=scan
+        )
+
+        if use_features_cache:
+            cache_features(
+                features,
+                dataset_name=dataset_name,
+                degree_sum=degree_sum,
+                shortest_paths=shortest_paths,
+                edge_betweenness=edge_betweenness,
+                degree_centrality=degree_centrality,
+                closeness=closeness,
+                local_clustering_coefficient=local_clustering_coefficient,
+                pagerank=pagerank,
+                eigenvector_centrality=eigenvector_centrality,
+                algebraic_distance=algebraic_distance,
+                diameter=diameter,
+                density=density,
+                preferential_attachment=preferential_attachment,
+                common_neighbor=common_neighbor,
+                katz_index=katz_index,
+                jaccard_index=jaccard_index,
+                adjusted_rand=adjusted_rand,
+                adamic_adar=adamic_adar,
+                local_degree_score=local_degree_score,
+                local_similarity_score=local_similarity_score,
+                scan=scan
+            )
+
+    print("Features shape:", features.shape)
+    y = np.array(dataset.data.y)
+    # del dataset
+    gc.collect()
+
+    splits = load_dataset_splits(dataset_name)
+    nodes_nums = [data.num_nodes for split in splits for data in dataset[split.train_idxs]]
+    # del dataset
+    n_bins = int(np.median(nodes_nums))
+    print(n_bins)
+    test_metrics = []
+
+    for i, split in enumerate(splits):
+        if verbose:
+            print("Starting computing split", i)
+
+        train_idxs = split.train_idxs
+        test_idxs = split.test_idxs
+        features_train = features.iloc[train_idxs, :]
+        features_test = features.iloc[test_idxs, :]
+        y_train = y[train_idxs]
+        y_test = y[test_idxs]
+
+        nodes_nums = [data.num_nodes for data in dataset[train_idxs]]
+        n_bins = int(np.median(nodes_nums))
+        n_bins = 60
+
+        ldp_params = {
+            "n_bins": n_bins,
+            "normalization": normalization,
+            "aggregation": aggregation,
+            "log_degree": log_degree,
+        }
+
+        X_train = calculate_features_matrix(features_train, **ldp_params)
+        X_test = calculate_features_matrix(features_test, **ldp_params)
+
+
+        model = get_model(model_type=model_type, verbose=verbose)
+        model.fit(X_train, y_train)
+
+        y_pred = model.predict(X_test)
+        acc = accuracy_score(y_test, y_pred)
+        test_metrics.append(acc)
+
+    acc_mean = np.mean(test_metrics)
+    acc_std = np.std(test_metrics)
+
+    print(f'{dataset_name}: acc_mean: {acc_mean}, acc_std: {acc_std}')
+
+    return acc_mean, acc_std
