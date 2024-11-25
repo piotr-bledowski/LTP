@@ -385,7 +385,7 @@ def perform_experiment(
                 scan=scan
             )
 
-    print("Features shape:", features.shape)
+    #print("Features shape:", features.shape)
     y = np.array(dataset.data.y)
     # del dataset
     gc.collect()
@@ -394,7 +394,7 @@ def perform_experiment(
     nodes_nums = [data.num_nodes for split in splits for data in dataset[split.train_idxs]]
     # del dataset
     n_bins = int(np.median(nodes_nums))
-    print(n_bins)
+    #print(n_bins)
     test_metrics = []
 
     for i, split in enumerate(splits):

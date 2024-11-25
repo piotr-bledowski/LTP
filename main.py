@@ -2,8 +2,10 @@ import argparse
 import os
 import sys
 import warnings
+import pickle
 from pathlib import Path
 from typing import Union
+from time import time
 import matplotlib.pyplot as plt
 
 from data_loading import DATASET_NAMES
@@ -155,34 +157,114 @@ if __name__ == "__main__":
     plots_dir.mkdir(parents=True, exist_ok=True)
 
     datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
-    all_feature_importances = []
+    ldp_features = ['deg max', 'deg', 'deg min', 'deg mean', 'deg stddev']
 
     for dataset_name in datasets:
-        print(dataset_name)
-        acc_mean, acc_std = perform_experiment(
-            dataset_name=dataset_name,
-            verbose=False,
-            degree_sum=True,
-            shortest_paths=True,
-            edge_betweenness=True,
-            degree_centrality=True,
-            local_clustering_coefficient=True,
-            pagerank=True,
-            eigenvector_centrality=True,
-            algebraic_distance=True,
-            diameter=True,
-            density=True,
-            preferential_attachment=True,
-            common_neighbor=True,
-            katz_index=True,
-            jaccard_index=True,
-            adjusted_rand=True,
-            adamic_adar=True,
-            local_degree_score=True,
-            local_similarity_score=True,
-            scan=True,
-            plots_dir=plots_dir
-        )
+        best_params = {
+            'degree_sum': False,
+            'shortest_paths': False,
+            'edge_betweenness': False,
+            'degree_centrality': False,
+            'local_clustering_coefficient': False,
+            'pagerank': False,
+            'eigenvector_centrality': False,
+            'algebraic_distance': False,
+            'diameter': False,
+            'density': False,
+            'preferential_attachment': False,
+            'common_neighbor': False,
+            'katz_index': False,
+            'jaccard_index': False,
+            'adjusted_rand': False,
+            'adamic_adar': False,
+            'local_degree_score': False,
+            'local_similarity_score': False,
+            'scan': False,
+        }
+
+        best_acc = 0
+        best_acc_std = 0
+
+        start = time()
+
+        with open(os.path.join('plots', 'feature_importance', f'{dataset_name}.pkl'), 'rb') as handle:
+            b = pickle.load(handle)
+            d = b.to_dict('records')[0]
+            d = sorted(d.items(), key=lambda x: x[1], reverse=True)
+
+            imp = [x for x in d if x[0] not in ldp_features]
+
+            for i in range(len(imp)):
+                params = best_params.copy()
+                next_descriptor = imp[i][0]
+                params[next_descriptor] = True
+
+                acc_mean, acc_std = perform_experiment(
+                    dataset_name=dataset_name,
+                    verbose=False,
+                    degree_sum=params['degree_sum'],
+                    shortest_paths=params['shortest_paths'],
+                    edge_betweenness=params['edge_betweenness'],
+                    degree_centrality=params['degree_centrality'],
+                    local_clustering_coefficient=params['local_clustering_coefficient'],
+                    pagerank=params['pagerank'],
+                    eigenvector_centrality=params['eigenvector_centrality'],
+                    algebraic_distance=params['algebraic_distance'],
+                    diameter=params['diameter'],
+                    density=params['density'],
+                    preferential_attachment=params['preferential_attachment'],
+                    common_neighbor=params['common_neighbor'],
+                    katz_index=params['katz_index'],
+                    jaccard_index=params['jaccard_index'],
+                    adjusted_rand=params['adjusted_rand'],
+                    adamic_adar=params['adamic_adar'],
+                    local_degree_score=params['local_degree_score'],
+                    local_similarity_score=params['local_similarity_score'],
+                    scan=params['scan'],
+                    plots_dir=plots_dir
+                )
+
+                if acc_mean > best_acc:
+                    best_acc = acc_mean
+                    best_params = params
+                    best_acc_std = acc_std
+
+        total_time = round(time() - start, 2)
+
+        best_params['time'] = total_time
+        best_params['acc_mean'] = best_acc
+        best_params['acc_std'] = best_acc_std
+
+        with open(os.path.join('results', f'{dataset_name}_best_features.pkl'), 'wb') as f:
+            pickle.dump(best_params, f)
+
+
+    # for dataset_name in datasets:
+    #     print(dataset_name)
+    #     acc_mean, acc_std = perform_experiment(
+    #         dataset_name=dataset_name,
+    #         verbose=False,
+    #         degree_sum=True,
+    #         shortest_paths=True,
+    #         edge_betweenness=True,
+    #         degree_centrality=True,
+    #         local_clustering_coefficient=True,
+    #         pagerank=True,
+    #         eigenvector_centrality=True,
+    #         algebraic_distance=True,
+    #         diameter=True,
+    #         density=True,
+    #         preferential_attachment=True,
+    #         common_neighbor=True,
+    #         katz_index=True,
+    #         jaccard_index=True,
+    #         adjusted_rand=True,
+    #         adamic_adar=True,
+    #         local_degree_score=True,
+    #         local_similarity_score=True,
+    #         scan=True,
+    #         plots_dir=plots_dir
+    #     )
         #all_feature_importances.append(importances)
 
     #df = pd.concat(all_feature_importances, ignore_index=True)
