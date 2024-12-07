@@ -9,7 +9,7 @@ from time import time
 import matplotlib.pyplot as plt
 
 from data_loading import DATASET_NAMES
-from perform_experiment import perform_experiment
+from perform_experiment import perform_experiment, perform_experiment_calculate_importance
 import pandas as pd
 # the only warning raised is ConvergenceWarning for linear SVM, which is
 # acceptable (max_iter is already higher than default); unfortunately, we
@@ -156,29 +156,29 @@ if __name__ == "__main__":
     plots_dir = Path("plots") / "feature_importance"
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
+    datasets = ['COLLAB'] #['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
     ldp_features = ['deg max', 'deg', 'deg min', 'deg mean', 'deg stddev']
 
     for dataset_name in datasets:
         best_params = {
-            'degree_sum': False,
-            'shortest_paths': False,
-            'edge_betweenness': False,
-            'degree_centrality': False,
-            'local_clustering_coefficient': False,
+            'degree sum': False,
+            'shortest paths': False,
+            'edge betweenness': False,
+            'degree centrality': False,
+            'local clustering coefficient': False,
             'pagerank': False,
-            'eigenvector_centrality': False,
-            'algebraic_distance': False,
+            'eigenvector centrality': False,
+            'algebraic distance': False,
             'diameter': False,
             'density': False,
-            'preferential_attachment': False,
-            'common_neighbor': False,
-            'katz_index': False,
-            'jaccard_index': False,
-            'adjusted_rand': False,
-            'adamic_adar': False,
-            'local_degree_score': False,
-            'local_similarity_score': False,
+            'preferential attachment': False,
+            'common neighbor': False,
+            'katz index': False,
+            'jaccard index': False,
+            'adjusted rand': False,
+            'adamic adar': False,
+            'local degree score': False,
+            'local similarity score': False,
             'scan': False,
         }
 
@@ -202,24 +202,24 @@ if __name__ == "__main__":
                 acc_mean, acc_std = perform_experiment(
                     dataset_name=dataset_name,
                     verbose=False,
-                    degree_sum=params['degree_sum'],
-                    shortest_paths=params['shortest_paths'],
-                    edge_betweenness=params['edge_betweenness'],
-                    degree_centrality=params['degree_centrality'],
-                    local_clustering_coefficient=params['local_clustering_coefficient'],
+                    degree_sum=params['degree sum'],
+                    shortest_paths=params['shortest paths'],
+                    edge_betweenness=params['edge betweenness'],
+                    degree_centrality=params['degree centrality'],
+                    local_clustering_coefficient=params['local clustering coefficient'],
                     pagerank=params['pagerank'],
-                    eigenvector_centrality=params['eigenvector_centrality'],
-                    algebraic_distance=params['algebraic_distance'],
+                    eigenvector_centrality=params['eigenvector centrality'],
+                    algebraic_distance=params['algebraic distance'],
                     diameter=params['diameter'],
                     density=params['density'],
-                    preferential_attachment=params['preferential_attachment'],
-                    common_neighbor=params['common_neighbor'],
-                    katz_index=params['katz_index'],
-                    jaccard_index=params['jaccard_index'],
-                    adjusted_rand=params['adjusted_rand'],
-                    adamic_adar=params['adamic_adar'],
-                    local_degree_score=params['local_degree_score'],
-                    local_similarity_score=params['local_similarity_score'],
+                    preferential_attachment=params['preferential attachment'],
+                    common_neighbor=params['common neighbor'],
+                    katz_index=params['katz index'],
+                    jaccard_index=params['jaccard index'],
+                    adjusted_rand=params['adjusted rand'],
+                    adamic_adar=params['adamic adar'],
+                    local_degree_score=params['local degree score'],
+                    local_similarity_score=params['local similarity score'],
                     scan=params['scan'],
                     plots_dir=plots_dir
                 )
@@ -238,10 +238,11 @@ if __name__ == "__main__":
         with open(os.path.join('results', f'{dataset_name}_best_features.pkl'), 'wb') as f:
             pickle.dump(best_params, f)
 
-
+    # all_feature_importances = []
+    #
     # for dataset_name in datasets:
     #     print(dataset_name)
-    #     acc_mean, acc_std = perform_experiment(
+    #     importances = perform_experiment_calculate_importance(
     #         dataset_name=dataset_name,
     #         verbose=False,
     #         degree_sum=True,
@@ -265,12 +266,12 @@ if __name__ == "__main__":
     #         scan=True,
     #         plots_dir=plots_dir
     #     )
-        #all_feature_importances.append(importances)
-
-    #df = pd.concat(all_feature_importances, ignore_index=True)
-    #df = pd.DataFrame(df.mean(axis=0)).transpose()
-    #df.index = [""]
-    #df.to_pickle(plots_dir / "average_df.pkl")
-    #df.plot.bar(rot=0)
-    #plt.tight_layout()
-    #plt.savefig(plots_dir / "average.pdf")
+    #     all_feature_importances.append(importances)
+    #
+    # df = pd.concat(all_feature_importances, ignore_index=True)
+    # df = pd.DataFrame(df.mean(axis=0)).transpose()
+    # df.index = [""]
+    # df.to_pickle(plots_dir / "average_df.pkl")
+    # df.plot.bar(rot=0)
+    # plt.tight_layout()
+    # plt.savefig(plots_dir / "average.pdf")

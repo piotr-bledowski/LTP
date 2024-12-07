@@ -126,7 +126,7 @@ def perform_experiment_calculate_importance(
                 scan=scan
             )
 
-    print("Features shape:", features.shape)
+    #print("Features shape:", features.shape)
     y = np.array(dataset.data.y)
     # del dataset
     gc.collect()
@@ -135,7 +135,7 @@ def perform_experiment_calculate_importance(
     nodes_nums = [data.num_nodes for split in splits for data in dataset[split.train_idxs]]
     # del dataset
     n_bins = int(np.median(nodes_nums))
-    print(n_bins)
+    #print(n_bins)
     test_metrics = []
 
     importances = []
@@ -170,25 +170,44 @@ def perform_experiment_calculate_importance(
         columns.extend([f"deg_max {i}" for i in range(n_bins)])
         columns.extend([f"deg_mean {i}" for i in range(n_bins)])
         columns.extend([f"deg_stddev {i}" for i in range(n_bins)])
-        columns.extend([f"degree_sum {i}" for i in range(n_bins)])
-        columns.extend([f"shortest_paths {i}" for i in range(n_bins)])
-        columns.extend([f"edge_betweenness {i}" for i in range(n_bins)])
-        columns.extend([f"degree_centrality {i}" for i in range(n_bins)])
-        columns.extend([f"local_clustering_coefficient {i}" for i in range(n_bins)])
-        columns.extend([f"pagerank {i}" for i in range(n_bins)])
-        columns.extend([f"eigenvector_centrality {i}" for i in range(n_bins)])
-        columns.extend([f"algebraic_distance {i}" for i in range(n_bins)])
-        columns.extend([f"diameter {i}" for i in range(n_bins)])
-        columns.extend([f"density {i}" for i in range(n_bins)])
-        columns.extend([f"preferential_attachment {i}" for i in range(n_bins)])
-        columns.extend([f"common_neighbor {i}" for i in range(n_bins)])
-        columns.extend([f"katz_index {i}" for i in range(n_bins)])
-        columns.extend([f"jaccard_index {i}" for i in range(n_bins)])
-        columns.extend([f"adjusted_rand {i}" for i in range(n_bins)])
-        columns.extend([f"adamic_adar {i}" for i in range(n_bins)])
-        columns.extend([f"local_degree_score {i}" for i in range(n_bins)])
-        columns.extend([f"local_similarity_score {i}" for i in range(n_bins)])
-        columns.extend([f"scan {i}" for i in range(n_bins)])
+        if degree_sum:
+            columns.extend([f"degree_sum {i}" for i in range(n_bins)])
+        if shortest_paths:
+            columns.extend([f"shortest_paths {i}" for i in range(n_bins)])
+        if edge_betweenness:
+            columns.extend([f"edge_betweenness {i}" for i in range(n_bins)])
+        if degree_centrality:
+            columns.extend([f"degree_centrality {i}" for i in range(n_bins)])
+        if local_clustering_coefficient:
+            columns.extend([f"local_clustering_coefficient {i}" for i in range(n_bins)])
+        if pagerank:
+            columns.extend([f"pagerank {i}" for i in range(n_bins)])
+        if eigenvector_centrality:
+            columns.extend([f"eigenvector_centrality {i}" for i in range(n_bins)])
+        if algebraic_distance:
+            columns.extend([f"algebraic_distance {i}" for i in range(n_bins)])
+        if diameter:
+            columns.extend([f"diameter {i}" for i in range(n_bins)])
+        if density:
+            columns.extend([f"density {i}" for i in range(n_bins)])
+        if preferential_attachment:
+            columns.extend([f"preferential_attachment {i}" for i in range(n_bins)])
+        if common_neighbor:
+            columns.extend([f"common_neighbor {i}" for i in range(n_bins)])
+        if katz_index:
+            columns.extend([f"katz_index {i}" for i in range(n_bins)])
+        if jaccard_index:
+            columns.extend([f"jaccard_index {i}" for i in range(n_bins)])
+        if adjusted_rand:
+            columns.extend([f"adjusted_rand {i}" for i in range(n_bins)])
+        if adamic_adar:
+            columns.extend([f"adamic_adar {i}" for i in range(n_bins)])
+        if local_degree_score:
+            columns.extend([f"local_degree_score {i}" for i in range(n_bins)])
+        if local_similarity_score:
+            columns.extend([f"local_similarity_score {i}" for i in range(n_bins)])
+        if scan:
+            columns.extend([f"scan {i}" for i in range(n_bins)])
 
         # df_train = pd.DataFrame(X_train, columns=columns)
         # print(X_train.shape)
@@ -217,8 +236,8 @@ def perform_experiment_calculate_importance(
     # total importance of each feature group
     # columns = dropper.get_feature_names_out()
     columns = [col.split(" ")[0].replace("_", " ") for col in columns]
-    print(f"Len columns: {len(columns)}")
-    print(f"Len importances: {len(importances)}")
+    #print(f"Len columns: {len(columns)}")
+    #print(f"Len importances: {len(importances)}")
     df = pd.DataFrame({"column": columns, "value": importances})
     importances = df.groupby("column").sum().transpose()
     print("xd")
@@ -228,46 +247,86 @@ def perform_experiment_calculate_importance(
         "deg max",
         "deg mean",
         "deg stddev",
-        "degree sum",
-        "shortest paths",
-        "edge betweenness",
-        "degree centrality",
-        "local clustering coefficient",
-        "pagerank",
-        "eigenvector centrality",
-        "algebraic distance",
-        "diameter",
-        "density",
-        "preferential attachment",
-        "common neighbor",
-        "katz index",
-        "jaccard index",
-        "adjusted rand",
-        "adamic adar",
-        "local degree score",
-        "local similarity score",
-        "scan",
     ]
+    #     "degree sum",
+    #     "shortest paths",
+    #     "edge betweenness",
+    #     "degree centrality",
+    #     "local clustering coefficient",
+    #     "pagerank",
+    #     "eigenvector centrality",
+    #     "algebraic distance",
+    #     "diameter",
+    #     "density",
+    #     "preferential attachment",
+    #     "common neighbor",
+    #     "katz index",
+    #     "jaccard index",
+    #     "adjusted rand",
+    #     "adamic adar",
+    #     "local degree score",
+    #     "local similarity score",
+    #     "scan",
+    # ]
 
+    if degree_sum:
+        columns.append("degree sum")
+    if shortest_paths:
+        columns.append("shortest paths")
+    if edge_betweenness:
+        columns.append("edge betweenness")
+    if degree_centrality:
+        columns.append("degree centrality")
+    if local_clustering_coefficient:
+        columns.append("local clustering coefficient")
+    if pagerank:
+        columns.append("pagerank")
+    if eigenvector_centrality:
+        columns.append("eigenvector centrality")
+    if algebraic_distance:
+        columns.append("algebraic distance")
+    if diameter:
+        columns.append("diameter")
+    if density:
+        columns.append("density")
+    if preferential_attachment:
+        columns.append("preferential attachment")
+    if common_neighbor:
+        columns.append("common neighbor")
+    if katz_index:
+        columns.append("katz index")
+    if jaccard_index:
+        columns.append("jaccard index")
+    if adjusted_rand:
+        columns.append("adjusted rand")
+    if adamic_adar:
+        columns.append("adamic adar")
+    if local_degree_score:
+        columns.append("local degree score")
+    if local_similarity_score:
+        columns.append("local similarity score")
+    if scan:
+        columns.append("scan")
+    
     importances = importances[columns]
     importances.columns = columns
     importances.index = [""]
 
-    filename = dataset_name.removeprefix("ogbg-mol")
+    # filename = dataset_name.removeprefix("ogbg-mol")
 
-    importances.to_pickle(plots_dir / f'{filename}.pkl')
+    # importances.to_pickle(plots_dir / f'{filename}.pkl')
 
-    plt.figure(figsize=(12, 8))  # Adjust these values as needed
+    # plt.figure(figsize=(12, 8))  # Adjust these values as needed
 
-    ax = importances.plot.bar(rot=0)
+    # ax = importances.plot.bar(rot=0)
 
-    plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
+    # plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
 
-    plt.tight_layout()
+    # plt.tight_layout()
 
-    plt.subplots_adjust(right=0.75)
+    # plt.subplots_adjust(right=0.75)
 
-    plt.savefig(plots_dir / f"{filename}.pdf", bbox_inches='tight', dpi=300)
+    # plt.savefig(plots_dir / f"{filename}.pdf", bbox_inches='tight', dpi=300)
 
     return importances
 
