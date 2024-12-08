@@ -1,4 +1,5 @@
 from sklearn.model_selection import GridSearchCV
+from xgboost import XGBClassifier
 
 # use Intel Extensions for Scikit-learn, if they are available
 try:
@@ -45,6 +46,16 @@ def get_model(
             random_state=0,
         )
         # we do not perform hyperparameter tuning for RF
+        params_grid = {}
+    elif model_type == "XGBClassifier":
+        model = XGBClassifier(
+            n_estimators=500,
+            max_depth=5,
+            learning_rate=0.1,
+            n_jobs=-1,
+            random_state=0,
+        )
+        # we do not perform hyperparameter tuning for XGB
         params_grid = {}
     else:
         raise ValueError(f"Model type '{model_type}' not supported")
