@@ -66,52 +66,55 @@ def try_loading_cached_features(
 
 def create_features_table(
     dataset_name: str,
-    degree_sum: bool = False,
-    shortest_paths: bool = False,
-    edge_betweenness: bool = False,
-    degree_centrality: bool = False,
-    closeness: bool = False,
-    local_clustering_coefficient: bool = False,
-    pagerank: bool = False,
-    eigenvector_centrality: bool = False,
-    algebraic_distance: bool = False,
-    diameter: bool = False,
-    density: bool = False,
-    preferential_attachment: bool = False,
-    common_neighbor: bool = False,
-    katz_index: bool = False,
-    jaccard_index: bool = False,
-    adjusted_rand: bool = False,
-    adamic_adar: bool = False,
-    local_degree_score: bool = False,
-    local_similarity_score: bool = False,
-    scan: bool = False
+    **kwargs
 ) -> Optional[pd.DataFrame]:
     if not os.path.exists(FEATURES_CACHE_DIR):
         return None
-    
-    features = {
-        degree_sum : False,
-        shortest_paths : False,
-        edge_betweenness :False,
-        degree_centrality : False,
-        closeness : False,
-        local_clustering_coefficient : False,
-        pagerank :False,
-        eigenvector_centrality :False,
-        algebraic_distance : False,
-        diameter : False,
-        density :False,
-        preferential_attachment : False,
-        common_neighbor : False,
-        katz_index : False,
-        jaccard_index :False,
-        adjusted_rand : False,
-        adamic_adar : False,
-        local_degree_score : False,
-        local_similarity_score : False,
-        scan : False
-    }
+
+    true_features = [str(k) for k, v in kwargs.items() if v]
+    list_of_features = ["degree_sum", "shortest_paths", "edge_betweenness", "degree_centrality", "closeness", "local_clustering_coefficient", "pagerank", "eigenvector_centrality", "algebraic_distance", "diameter", "density", "preferential_attachment", "common_neighbor", "katz_index", "jaccard_index", "adjusted_rand", "adamic_adar", "local_degree_score", "local_similarity_score", "scan"]
+    dict_of_features = {k: False for k in list_of_features}
+    df = pd.DataFrame() 
+
+    # create filenames for each single feature from true_features, this feature should be true and the rest false. order of list_of_features is good, for example name_dataset_1_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0_0.zst
+    for feature in true_features:
+        dict_of_features[feature] = True
+        filename = _get_file_name(
+            dataset_name,
+            dict_of_features["degree_sum"],
+            dict_of_features["shortest_paths"],
+            dict_of_features["edge_betweenness"],
+            dict_of_features["degree_centrality"],
+            dict_of_features["closeness"],
+            dict_of_features["local_clustering_coefficient"],
+            dict_of_features["pagerank"],
+            dict_of_features["eigenvector_centrality"],
+            dict_of_features["algebraic_distance"],
+            dict_of_features["diameter"],
+            dict_of_features["density"],
+            dict_of_features["preferential_attachment"],
+            dict_of_features["common_neighbor"],
+            dict_of_features["katz_index"],
+            dict_of_features["jaccard_index"],
+            dict_of_features["adjusted_rand"],
+            dict_of_features["adamic_adar"],
+            dict_of_features["local_degree_score"],
+            dict_of_features["local_similarity_score"],
+            dict_of_features["scan"]
+        )
+        dict_of_features[feature] = False
+        filepath = FEATURES_CACHE_DIR / filename
+        try:
+            feature_data = pd.read_pickle(filepath, compression="zstd")
+            log_features = ['deg', 'deg_min', 'deg_max', 'deg_mean', 'deg_stddev']
+            if "deg" in df.columns:
+                df = pd.concat([df, feature_data.drop(columns=log_features)], axis=1)
+            else:
+                df = pd.concat([df, feature_data], axis=1)
+        except FileNotFoundError:
+            pass
+    return df
+
     
     # create dataframe, iterate through features, open files and add data
     df = pd.DataFrame() # TODO

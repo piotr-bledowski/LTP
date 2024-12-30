@@ -152,80 +152,81 @@ def parse_args() -> argparse.Namespace:
 
 def create_cached_features():
     # create cache table
-    params = {
-            'degree sum': False,
-            'shortest paths': False,
-            'edge betweenness': False,
-            'degree centrality': False,
-            'local clustering coefficient': False,
-            'pagerank': False,
-            'eigenvector centrality': False,
-            'algebraic distance': False,
-            'diameter': False,
-            'density': False,
-            'preferential attachment': False,
-            'common neighbor': False,
-            'katz index': False,
-            'jaccard index': False,
-            'adjusted rand': False,
-            'adamic adar': False,
-            'local degree score': False,
-            'local similarity score': False,
-            'scan': False,
-        }
-    for dataset_name in datasets:
-        for feature_name in params.keys():
-            params[feature_name] = True
-            extracted_data = extract_features(
-                        dataset= load_dataset(dataset_name),
-                        degree_sum=params['degree sum'],
-                        shortest_paths=params['shortest paths'],
-                        edge_betweenness=params['edge betweenness'],
-                        degree_centrality=params['degree centrality'],
-                        local_clustering_coefficient=params['local clustering coefficient'],
-                        pagerank=params['pagerank'],
-                        eigenvector_centrality=params['eigenvector centrality'],
-                        algebraic_distance=params['algebraic distance'],
-                        diameter=params['diameter'],
-                        density=params['density'],
-                        preferential_attachment=params['preferential attachment'],
-                        common_neighbor=params['common neighbor'],
-                        katz_index=params['katz index'],
-                        jaccard_index=params['jaccard index'],
-                        adjusted_rand=params['adjusted rand'],
-                        adamic_adar=params['adamic adar'],
-                        local_degree_score=params['local degree score'],
-                        local_similarity_score=params['local similarity score'],
-                        scan=params['scan'],
-                        verbose=False,
-                    )
-            print("Udało sie!!")
-            print(extracted_data.shape)
-            cache_features(
-                extracted_data,
-                dataset_name,
-                params["degree sum"],
-                params["shortest paths"],
-                params["edge betweenness"],
-                params["degree centrality"],
-                False,
-                False,
-                params["pagerank"],
-                params["eigenvector centrality"],
-                params["algebraic distance"],
-                params["diameter"],
-                params["density"],
-                params["preferential attachment"],
-                params["common neighbor"],
-                params["katz index"],
-                params["jaccard index"],
-                params["adjusted rand"],
-                params["adamic adar"],
-                params["local degree score"],
-                params["local similarity score"],
-                params["scan"]
-            )
-            params[feature_name] = False
+    if not os.path.exists('features_cache') or len(os.listdir('features_cache')) == 0:
+        params = {
+                'degree sum': False,
+                'shortest paths': False,
+                'edge betweenness': False,
+                'degree centrality': False,
+                'local clustering coefficient': False,
+                'pagerank': False,
+                'eigenvector centrality': False,
+                'algebraic distance': False,
+                'diameter': False,
+                'density': False,
+                'preferential attachment': False,
+                'common neighbor': False,
+                'katz index': False,
+                'jaccard index': False,
+                'adjusted rand': False,
+                'adamic adar': False,
+                'local degree score': False,
+                'local similarity score': False,
+                'scan': False,
+            }
+        for dataset_name in datasets:
+            for feature_name in params.keys():
+                params[feature_name] = True
+                extracted_data = extract_features(
+                            dataset= load_dataset(dataset_name),
+                            degree_sum=params['degree sum'],
+                            shortest_paths=params['shortest paths'],
+                            edge_betweenness=params['edge betweenness'],
+                            degree_centrality=params['degree centrality'],
+                            local_clustering_coefficient=params['local clustering coefficient'],
+                            pagerank=params['pagerank'],
+                            eigenvector_centrality=params['eigenvector centrality'],
+                            algebraic_distance=params['algebraic distance'],
+                            diameter=params['diameter'],
+                            density=params['density'],
+                            preferential_attachment=params['preferential attachment'],
+                            common_neighbor=params['common neighbor'],
+                            katz_index=params['katz index'],
+                            jaccard_index=params['jaccard index'],
+                            adjusted_rand=params['adjusted rand'],
+                            adamic_adar=params['adamic adar'],
+                            local_degree_score=params['local degree score'],
+                            local_similarity_score=params['local similarity score'],
+                            scan=params['scan'],
+                            verbose=False,
+                        )
+                print("Udało sie!!")
+                print(extracted_data.shape)
+                cache_features(
+                    extracted_data,
+                    dataset_name,
+                    params["degree sum"],
+                    params["shortest paths"],
+                    params["edge betweenness"],
+                    params["degree centrality"],
+                    False,
+                    False,
+                    params["pagerank"],
+                    params["eigenvector centrality"],
+                    params["algebraic distance"],
+                    params["diameter"],
+                    params["density"],
+                    params["preferential attachment"],
+                    params["common neighbor"],
+                    params["katz index"],
+                    params["jaccard index"],
+                    params["adjusted rand"],
+                    params["adamic adar"],
+                    params["local degree score"],
+                    params["local similarity score"],
+                    params["scan"]
+                )
+                params[feature_name] = False
 
 
 
@@ -236,7 +237,7 @@ if __name__ == "__main__":
     plots_dir = Path("plots") / "feature_importance"
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    datasets = ['DD'] #['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
+    datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI']
     ldp_features = ['deg max', 'deg', 'deg min', 'deg mean', 'deg stddev']
 
 
@@ -312,6 +313,8 @@ if __name__ == "__main__":
                     best_acc = acc_mean
                     best_params = params
                     best_acc_std = acc_std
+                    true_best_params = [k for k, v in best_params.items() if v]
+                    print(true_best_params)
 
         total_time = round(time() - start, 2)
 
