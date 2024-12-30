@@ -64,6 +64,93 @@ def try_loading_cached_features(
         return None
 
 
+def create_features_table(
+    dataset_name: str,
+    degree_sum: bool = False,
+    shortest_paths: bool = False,
+    edge_betweenness: bool = False,
+    degree_centrality: bool = False,
+    closeness: bool = False,
+    local_clustering_coefficient: bool = False,
+    pagerank: bool = False,
+    eigenvector_centrality: bool = False,
+    algebraic_distance: bool = False,
+    diameter: bool = False,
+    density: bool = False,
+    preferential_attachment: bool = False,
+    common_neighbor: bool = False,
+    katz_index: bool = False,
+    jaccard_index: bool = False,
+    adjusted_rand: bool = False,
+    adamic_adar: bool = False,
+    local_degree_score: bool = False,
+    local_similarity_score: bool = False,
+    scan: bool = False
+) -> Optional[pd.DataFrame]:
+    if not os.path.exists(FEATURES_CACHE_DIR):
+        return None
+    
+    features = {
+        degree_sum : False,
+        shortest_paths : False,
+        edge_betweenness :False,
+        degree_centrality : False,
+        closeness : False,
+        local_clustering_coefficient : False,
+        pagerank :False,
+        eigenvector_centrality :False,
+        algebraic_distance : False,
+        diameter : False,
+        density :False,
+        preferential_attachment : False,
+        common_neighbor : False,
+        katz_index : False,
+        jaccard_index :False,
+        adjusted_rand : False,
+        adamic_adar : False,
+        local_degree_score : False,
+        local_similarity_score : False,
+        scan : False
+    }
+    
+    # create dataframe, iterate through features, open files and add data
+    df = pd.DataFrame() # TODO
+    for feature in features.keys():
+        features[feature] = True
+        filename = _get_file_name(
+            features[dataset_name],
+            features[degree_sum],
+            features[shortest_paths],
+            features[edge_betweenness],
+            features[degree_centrality],
+            features[closeness],
+            features[local_clustering_coefficient],
+            features[pagerank],
+            features[eigenvector_centrality],
+            features[algebraic_distance],
+            features[diameter],
+            features[density],
+            features[preferential_attachment],
+            features[common_neighbor],
+            features[katz_index],
+            features[jaccard_index],
+            features[adjusted_rand],
+            features[adamic_adar],
+            features[local_degree_score],
+            features[local_similarity_score],
+            features[scan]
+        )
+        features[feature] = False
+        filepath = FEATURES_CACHE_DIR / filename
+
+        try:
+            feature_data = pd.read_pickle(filepath, compression="zstd")
+            df.append(feature_data) # TODO
+        except FileNotFoundError:
+            pass
+    return df
+
+
 def cache_features(
     features: pd.DataFrame,
     dataset_name: str,

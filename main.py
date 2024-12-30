@@ -7,10 +7,12 @@ from pathlib import Path
 from typing import Union
 from time import time
 import matplotlib.pyplot as plt
-
+from feature_extraction import extract_features
 from data_loading import DATASET_NAMES
 from perform_experiment import perform_experiment, perform_experiment_calculate_importance
 import pandas as pd
+from data_loading import load_dataset
+from caching import cache_features
 # the only warning raised is ConvergenceWarning for linear SVM, which is
 # acceptable (max_iter is already higher than default); unfortunately, we
 # have to do this globally for all warnings to affect child processes in
@@ -148,6 +150,84 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
+def create_cached_features():
+    # create cache table
+    params = {
+            'degree sum': False,
+            'shortest paths': False,
+            'edge betweenness': False,
+            'degree centrality': False,
+            'local clustering coefficient': False,
+            'pagerank': False,
+            'eigenvector centrality': False,
+            'algebraic distance': False,
+            'diameter': False,
+            'density': False,
+            'preferential attachment': False,
+            'common neighbor': False,
+            'katz index': False,
+            'jaccard index': False,
+            'adjusted rand': False,
+            'adamic adar': False,
+            'local degree score': False,
+            'local similarity score': False,
+            'scan': False,
+        }
+    for dataset_name in datasets:
+        for feature_name in params.keys():
+            params[feature_name] = True
+            extracted_data = extract_features(
+                        dataset= load_dataset(dataset_name),
+                        degree_sum=params['degree sum'],
+                        shortest_paths=params['shortest paths'],
+                        edge_betweenness=params['edge betweenness'],
+                        degree_centrality=params['degree centrality'],
+                        local_clustering_coefficient=params['local clustering coefficient'],
+                        pagerank=params['pagerank'],
+                        eigenvector_centrality=params['eigenvector centrality'],
+                        algebraic_distance=params['algebraic distance'],
+                        diameter=params['diameter'],
+                        density=params['density'],
+                        preferential_attachment=params['preferential attachment'],
+                        common_neighbor=params['common neighbor'],
+                        katz_index=params['katz index'],
+                        jaccard_index=params['jaccard index'],
+                        adjusted_rand=params['adjusted rand'],
+                        adamic_adar=params['adamic adar'],
+                        local_degree_score=params['local degree score'],
+                        local_similarity_score=params['local similarity score'],
+                        scan=params['scan'],
+                        verbose=False,
+                    )
+            print("Udało sie!!")
+            print(extracted_data.shape)
+            cache_features(
+                extracted_data,
+                dataset_name,
+                params["degree sum"],
+                params["shortest paths"],
+                params["edge betweenness"],
+                params["degree centrality"],
+                False,
+                False,
+                params["pagerank"],
+                params["eigenvector centrality"],
+                params["algebraic distance"],
+                params["diameter"],
+                params["density"],
+                params["preferential attachment"],
+                params["common neighbor"],
+                params["katz index"],
+                params["jaccard index"],
+                params["adjusted rand"],
+                params["adamic adar"],
+                params["local degree score"],
+                params["local similarity score"],
+                params["scan"]
+            )
+            params[feature_name] = False
+
+
 
 if __name__ == "__main__":
     plots_dir = Path("plots") / "feature_importance"
@@ -156,8 +236,12 @@ if __name__ == "__main__":
     plots_dir = Path("plots") / "feature_importance"
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    datasets = ['COLLAB'] #['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
+    datasets = ['DD'] #['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
     ldp_features = ['deg max', 'deg', 'deg min', 'deg mean', 'deg stddev']
+
+
+    create_cached_features()
+
 
     for dataset_name in datasets:
         best_params = {
@@ -235,6 +319,8 @@ if __name__ == "__main__":
         best_params['acc_mean'] = best_acc
         best_params['acc_std'] = best_acc_std
 
+        os.makedirs('results', exist_ok=True)
+
         with open(os.path.join('results', f'{dataset_name}_best_features.pkl'), 'wb') as f:
             pickle.dump(best_params, f)
 
@@ -271,7 +357,7 @@ if __name__ == "__main__":
     # df = pd.concat(all_feature_importances, ignore_index=True)
     # df = pd.DataFrame(df.mean(axis=0)).transpose()
     # df.index = [""]
-    # df.to_pickle(plots_dir / "average_df.pkl")
+    # df.to_pickle(plots_dir / "DD.pkl")
     # df.plot.bar(rot=0)
     # plt.tight_layout()
-    # plt.savefig(plots_dir / "average.pdf")
+    # plt.savefig(plots_dir / "DD.pdf")

@@ -6,7 +6,7 @@ from sklearn.metrics import accuracy_score
 from feature_engine.selection import DropConstantFeatures
 import matplotlib.pyplot as plt
 import wandb
-from caching import try_loading_cached_features, cache_features
+from caching import try_loading_cached_features, cache_features, create_features_table
 from data_loading import load_dataset, load_dataset_splits
 from feature_extraction import extract_features, calculate_features_matrix
 from models import get_model
@@ -125,6 +125,10 @@ def perform_experiment_calculate_importance(
                 local_similarity_score=local_similarity_score,
                 scan=scan
             )
+
+    print("Features")
+    print(features.shape)
+    print(features)
 
     #print("Features shape:", features.shape)
     y = np.array(dataset.data.y)
@@ -366,83 +370,37 @@ def perform_experiment(
 
     dataset = load_dataset(dataset_name)
 
-    if use_features_cache:
-        features = try_loading_cached_features(
-            dataset_name,
-            degree_sum=degree_sum,
-            shortest_paths=shortest_paths,
-            edge_betweenness=edge_betweenness,
-            degree_centrality=degree_centrality,
-            closeness=closeness,
-            local_clustering_coefficient=local_clustering_coefficient,
-            pagerank=pagerank,
-            eigenvector_centrality=eigenvector_centrality,
-            algebraic_distance=algebraic_distance,
-            diameter=diameter,
-            density=density,
-            preferential_attachment=preferential_attachment,
-            common_neighbor=common_neighbor,
-            katz_index=katz_index,
-            jaccard_index=jaccard_index,
-            adjusted_rand=adjusted_rand,
-            adamic_adar=adamic_adar,
-            local_degree_score=local_degree_score,
-            local_similarity_score=local_similarity_score,
-            scan=scan
-        )
-    else:
-        features = None
+    features = create_features_table(
+        dataset_name,
+        degree_sum=degree_sum,
+        shortest_paths=shortest_paths,
+        edge_betweenness=edge_betweenness,
+        degree_centrality=degree_centrality,
+        closeness=closeness,
+        local_clustering_coefficient=local_clustering_coefficient,
+        pagerank=pagerank,
+        eigenvector_centrality=eigenvector_centrality,
+        algebraic_distance=algebraic_distance,
+        diameter=diameter,
+        density=density,
+        preferential_attachment=preferential_attachment,
+        common_neighbor=common_neighbor,
+        katz_index=katz_index,
+        jaccard_index=jaccard_index,
+        adjusted_rand=adjusted_rand,
+        adamic_adar=adamic_adar,
+        local_degree_score=local_degree_score,
+        local_similarity_score=local_similarity_score,
+        scan=scan
+    )
 
-    if not use_features_cache or features is None:
-        features = extract_features(
-            dataset,
-            degree_sum=degree_sum,
-            shortest_paths=shortest_paths,
-            edge_betweenness=edge_betweenness,
-            degree_centrality=degree_centrality,
-            closeness=closeness,
-            local_clustering_coefficient=local_clustering_coefficient,
-            pagerank=pagerank,
-            eigenvector_centrality=eigenvector_centrality,
-            algebraic_distance=algebraic_distance,
-            diameter=diameter,
-            density=density,
-            preferential_attachment=preferential_attachment,
-            common_neighbor=common_neighbor,
-            katz_index=katz_index,
-            jaccard_index=jaccard_index,
-            adjusted_rand=adjusted_rand,
-            adamic_adar=adamic_adar,
-            local_degree_score=local_degree_score,
-            local_similarity_score=local_similarity_score,
-            scan=scan
-        )
 
-        if use_features_cache:
-            cache_features(
-                features,
-                dataset_name=dataset_name,
-                degree_sum=degree_sum,
-                shortest_paths=shortest_paths,
-                edge_betweenness=edge_betweenness,
-                degree_centrality=degree_centrality,
-                closeness=closeness,
-                local_clustering_coefficient=local_clustering_coefficient,
-                pagerank=pagerank,
-                eigenvector_centrality=eigenvector_centrality,
-                algebraic_distance=algebraic_distance,
-                diameter=diameter,
-                density=density,
-                preferential_attachment=preferential_attachment,
-                common_neighbor=common_neighbor,
-                katz_index=katz_index,
-                jaccard_index=jaccard_index,
-                adjusted_rand=adjusted_rand,
-                adamic_adar=adamic_adar,
-                local_degree_score=local_degree_score,
-                local_similarity_score=local_similarity_score,
-                scan=scan
-            )
+
+
+    print("Features")
+    print(features.columns)
+    print(features.shape)
+    print(features)
 
     #print("Features shape:", features.shape)
     y = np.array(dataset.data.y)
