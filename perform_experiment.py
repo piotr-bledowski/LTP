@@ -313,8 +313,6 @@ def perform_experiment(
 ):
     start = time.time()
 
-    dataset = load_dataset(dataset_name)
-
     features = create_features_table(
         dataset_name,
         degree_sum=degree_sum,
@@ -340,14 +338,13 @@ def perform_experiment(
     )
 
     #print("Features shape:", features.shape)
-    y = np.array(dataset.data.y)
-    # del dataset
+    path = f"y/{dataset_name}.npy"
+    y = np.load(path)
     gc.collect()
 
     splits = load_dataset_splits(dataset_name)
-    nodes_nums = [data.num_nodes for split in splits for data in dataset[split.train_idxs]]
-    # del dataset
-    n_bins = int(np.median(nodes_nums))
+    n_bins = 60
+
     #print(n_bins)
     test_metrics = []
 
@@ -361,10 +358,6 @@ def perform_experiment(
         features_test = features.iloc[test_idxs, :]
         y_train = y[train_idxs]
         y_test = y[test_idxs]
-
-        nodes_nums = [data.num_nodes for data in dataset[train_idxs]]
-        n_bins = int(np.median(nodes_nums))
-        n_bins = 60
 
         ldp_params = {
             "n_bins": n_bins,

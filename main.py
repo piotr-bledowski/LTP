@@ -13,6 +13,7 @@ from perform_experiment import perform_experiment, perform_experiment_calculate_
 import pandas as pd
 from data_loading import load_dataset
 from caching import cache_features
+import numpy as np
 # the only warning raised is ConvergenceWarning for linear SVM, which is
 # acceptable (max_iter is already higher than default); unfortunately, we
 # have to do this globally for all warnings to affect child processes in
@@ -150,35 +151,44 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
+def save_dataset_labels(dataset):
+    path = f"y/{dataset.name}.npy"
+    if not os.path.exists(path):
+        y = np.array(dataset.data.y)
+        np.save(path, y)
+
 def create_cached_features():
     # create cache table
     if not os.path.exists('features_cache') or len(os.listdir('features_cache')) == 0:
+        Path("y").mkdir(exist_ok=True)
         params = {
-                'degree sum': False,
-                'shortest paths': False,
-                'edge betweenness': False,
-                'degree centrality': False,
-                'local clustering coefficient': False,
-                'pagerank': False,
-                'eigenvector centrality': False,
-                'algebraic distance': False,
-                'diameter': False,
-                'density': False,
-                'preferential attachment': False,
-                'common neighbor': False,
-                'katz index': False,
-                'jaccard index': False,
-                'adjusted rand': False,
-                'adamic adar': False,
-                'local degree score': False,
-                'local similarity score': False,
-                'scan': False,
-            }
+            'degree sum': False,
+            'shortest paths': False,
+            'edge betweenness': False,
+            'degree centrality': False,
+            'local clustering coefficient': False,
+            'pagerank': False,
+            'eigenvector centrality': False,
+            'algebraic distance': False,
+            'diameter': False,
+            'density': False,
+            'preferential attachment': False,
+            'common neighbor': False,
+            'katz index': False,
+            'jaccard index': False,
+            'adjusted rand': False,
+            'adamic adar': False,
+            'local degree score': False,
+            'local similarity score': False,
+            'scan': False,
+        }
         for dataset_name in datasets:
+            dataset = load_dataset(dataset_name)
+            save_dataset_labels(dataset)
             for feature_name in params.keys():
                 params[feature_name] = True
                 extracted_data = extract_features(
-                            dataset= load_dataset(dataset_name),
+                            dataset=dataset,
                             degree_sum=params['degree sum'],
                             shortest_paths=params['shortest paths'],
                             edge_betweenness=params['edge betweenness'],
@@ -237,7 +247,7 @@ if __name__ == "__main__":
     plots_dir = Path("plots") / "feature_importance"
     plots_dir.mkdir(parents=True, exist_ok=True)
 
-    datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI']
+    datasets = ['DD', 'NCI1']
     ldp_features = ['deg max', 'deg', 'deg min', 'deg mean', 'deg stddev']
 
 
