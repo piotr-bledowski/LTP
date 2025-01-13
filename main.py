@@ -13,6 +13,7 @@ from perform_experiment import perform_experiment, perform_experiment_calculate_
 import pandas as pd
 from data_loading import load_dataset
 from caching import cache_features
+import numpy as np
 # the only warning raised is ConvergenceWarning for linear SVM, which is
 # acceptable (max_iter is already higher than default); unfortunately, we
 # have to do this globally for all warnings to affect child processes in
@@ -150,10 +151,17 @@ def parse_args() -> argparse.Namespace:
 
     return parser.parse_args()
 
-def create_cached_features(datasets):
+def save_dataset_labels(dataset):
+    path = f"y/{dataset.name}.npy"
+    if not os.path.exists(path):
+        y = np.array(dataset.data.y)
+        np.save(path, y)
+
+def create_cached_features():
     # create cache table
-    #if not os.path.exists('f_cache') or len(os.listdir('f_cache')) == 0:
-    params = {
+    if not os.path.exists('features_cache') or len(os.listdir('features_cache')) == 0:
+        Path("y").mkdir(exist_ok=True)
+        params = {
             'degree sum': False,
             'shortest paths': False,
             'edge betweenness': False,
@@ -174,59 +182,61 @@ def create_cached_features(datasets):
             'local similarity score': False,
             'scan': False,
         }
-    for dataset_name in datasets:
-        for feature_name in params.keys():
-            params[feature_name] = True
-            extracted_data = extract_features(
-                        dataset= load_dataset(dataset_name),
-                        degree_sum=params['degree sum'],
-                        shortest_paths=params['shortest paths'],
-                        edge_betweenness=params['edge betweenness'],
-                        degree_centrality=params['degree centrality'],
-                        local_clustering_coefficient=params['local clustering coefficient'],
-                        pagerank=params['pagerank'],
-                        eigenvector_centrality=params['eigenvector centrality'],
-                        algebraic_distance=params['algebraic distance'],
-                        diameter=params['diameter'],
-                        density=params['density'],
-                        preferential_attachment=params['preferential attachment'],
-                        common_neighbor=params['common neighbor'],
-                        katz_index=params['katz index'],
-                        jaccard_index=params['jaccard index'],
-                        adjusted_rand=params['adjusted rand'],
-                        adamic_adar=params['adamic adar'],
-                        local_degree_score=params['local degree score'],
-                        local_similarity_score=params['local similarity score'],
-                        scan=params['scan'],
-                        verbose=False,
-                    )
-            print("Udało sie!!")
-            print(extracted_data.shape)
-            cache_features(
-                extracted_data,
-                dataset_name,
-                params["degree sum"],
-                params["shortest paths"],
-                params["edge betweenness"],
-                params["degree centrality"],
-                False,
-                False,
-                params["pagerank"],
-                params["eigenvector centrality"],
-                params["algebraic distance"],
-                params["diameter"],
-                params["density"],
-                params["preferential attachment"],
-                params["common neighbor"],
-                params["katz index"],
-                params["jaccard index"],
-                params["adjusted rand"],
-                params["adamic adar"],
-                params["local degree score"],
-                params["local similarity score"],
-                params["scan"]
-            )
-            params[feature_name] = False
+        for dataset_name in datasets:
+            dataset = load_dataset(dataset_name)
+            save_dataset_labels(dataset)
+            for feature_name in params.keys():
+                params[feature_name] = True
+                extracted_data = extract_features(
+                            dataset=dataset,
+                            degree_sum=params['degree sum'],
+                            shortest_paths=params['shortest paths'],
+                            edge_betweenness=params['edge betweenness'],
+                            degree_centrality=params['degree centrality'],
+                            local_clustering_coefficient=params['local clustering coefficient'],
+                            pagerank=params['pagerank'],
+                            eigenvector_centrality=params['eigenvector centrality'],
+                            algebraic_distance=params['algebraic distance'],
+                            diameter=params['diameter'],
+                            density=params['density'],
+                            preferential_attachment=params['preferential attachment'],
+                            common_neighbor=params['common neighbor'],
+                            katz_index=params['katz index'],
+                            jaccard_index=params['jaccard index'],
+                            adjusted_rand=params['adjusted rand'],
+                            adamic_adar=params['adamic adar'],
+                            local_degree_score=params['local degree score'],
+                            local_similarity_score=params['local similarity score'],
+                            scan=params['scan'],
+                            verbose=False,
+                        )
+                print("Udało sie!!")
+                print(extracted_data.shape)
+                cache_features(
+                    extracted_data,
+                    dataset_name,
+                    params["degree sum"],
+                    params["shortest paths"],
+                    params["edge betweenness"],
+                    params["degree centrality"],
+                    False,
+                    False,
+                    params["pagerank"],
+                    params["eigenvector centrality"],
+                    params["algebraic distance"],
+                    params["diameter"],
+                    params["density"],
+                    params["preferential attachment"],
+                    params["common neighbor"],
+                    params["katz index"],
+                    params["jaccard index"],
+                    params["adjusted rand"],
+                    params["adamic adar"],
+                    params["local degree score"],
+                    params["local similarity score"],
+                    params["scan"]
+                )
+                params[feature_name] = False
 
 
 
@@ -238,6 +248,7 @@ if __name__ == "__main__":
     plots_dir.mkdir(parents=True, exist_ok=True)
 
     datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
+    datasets = ['DD', 'NCI1']
     ldp_features = ['deg max', 'deg', 'deg min', 'deg mean', 'deg stddev']
 
     #create_cached_features(datasets)
