@@ -157,9 +157,15 @@ def save_dataset_labels(dataset):
         y = np.array(dataset.data.y)
         np.save(path, y)
 
-def create_cached_features():
+def save_node_num(dataset):
+    path = f"y/{dataset.name}_node_num.npy"
+    if not os.path.exists(path):
+        y = np.array(dataset.data.y)
+        np.save(path, y)
+
+def create_cached_features(datasets):
     # create cache table
-    if not os.path.exists('features_cache') or len(os.listdir('features_cache')) == 0:
+    if not os.path.exists('feat_cache') or len(os.listdir('feat_cache')) == 0:
         Path("y").mkdir(exist_ok=True)
         params = {
             'degree sum': False,
@@ -244,11 +250,8 @@ if __name__ == "__main__":
     plots_dir = Path("plots") / "feature_importance"
     plots_dir.mkdir(parents=True, exist_ok=True)
     args = parse_args()
-    plots_dir = Path("plots") / "feature_importance"
-    plots_dir.mkdir(parents=True, exist_ok=True)
 
     datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
-    datasets = ['DD', 'NCI1']
     ldp_features = ['deg max', 'deg', 'deg min', 'deg mean', 'deg stddev']
 
     #create_cached_features(datasets)
@@ -294,7 +297,7 @@ if __name__ == "__main__":
                 params[next_descriptor] = True
 
                 acc_mean, acc_std = perform_experiment(
-                    model_type='KernelSVM',
+                    model_type='RandomForest',
                     dataset_name=dataset_name,
                     verbose=False,
                     degree_sum=params['degree sum'],

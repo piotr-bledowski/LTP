@@ -46,7 +46,7 @@ def perform_experiment_calculate_importance(
 ):
     start = time.time()
 
-    dataset = load_dataset(dataset_name)
+    #dataset = load_dataset(dataset_name)
 
     features = create_features_table(
         dataset_name,
@@ -76,9 +76,10 @@ def perform_experiment_calculate_importance(
     print(features.shape)
 
     #print("Features shape:", features.shape)
-    y = np.array(dataset.data.y)
+    #y = np.array(dataset.data.y)
+    y = np.load(f'y/{dataset_name}.npy')
     # del dataset
-    gc.collect()
+    #gc.collect()
 
     splits = load_dataset_splits(dataset_name)
     nodes_nums = [data.num_nodes for split in splits for data in dataset[split.train_idxs]]
@@ -340,7 +341,7 @@ def perform_experiment(
     #print("Features shape:", features.shape)
     path = f"y/{dataset_name}.npy"
     y = np.load(path)
-    gc.collect()
+    #gc.collect()
 
     splits = load_dataset_splits(dataset_name)
     n_bins = 60
