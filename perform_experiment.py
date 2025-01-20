@@ -306,7 +306,7 @@ def perform_experiment(
         normalization: str = "none",
         aggregation: str = "histogram",
         log_degree: bool = False,
-        model_type: str = "XGBClassifier",
+        model_type: str = "LightGBM",
         use_features_cache: bool = True,
         verbose: bool = False,
         plots_dir: str = "plots"
