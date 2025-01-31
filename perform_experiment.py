@@ -15,6 +15,7 @@ import pandas as pd
 
 def perform_experiment_calculate_importance(
         dataset_name: str,
+        atom_features: bool = False,
         degree_sum: bool = False,
         shortest_paths: bool = False,
         edge_betweenness: bool = False,
@@ -50,6 +51,7 @@ def perform_experiment_calculate_importance(
 
     features = create_features_table(
         dataset_name,
+        atom_features=atom_features,
         degree_sum=degree_sum,
         shortest_paths=shortest_paths,
         edge_betweenness=edge_betweenness,
@@ -119,6 +121,8 @@ def perform_experiment_calculate_importance(
         columns.extend([f"deg_max {i}" for i in range(n_bins)])
         columns.extend([f"deg_mean {i}" for i in range(n_bins)])
         columns.extend([f"deg_stddev {i}" for i in range(n_bins)])
+        if atom_features:
+            columns.extend([f"atom_features {i}" for i in range(n_bins)])
         if degree_sum:
             columns.extend([f"degree_sum {i}" for i in range(n_bins)])
         if shortest_paths:
@@ -187,6 +191,7 @@ def perform_experiment_calculate_importance(
     columns = [col.split(" ")[0].replace("_", " ") for col in columns]
     #print(f"Len columns: {len(columns)}")
     #print(f"Len importances: {len(importances)}")
+    print(f"Columns: {len(columns)}, values: {np.array(importances).shape}")
     df = pd.DataFrame({"column": columns, "value": importances})
     importances = df.groupby("column").sum().transpose()
     print("xd")
@@ -217,7 +222,8 @@ def perform_experiment_calculate_importance(
     #     "local similarity score",
     #     "scan",
     # ]
-
+    if atom_features:
+        columns.append("atom features")
     if degree_sum:
         columns.append("degree sum")
     if shortest_paths:

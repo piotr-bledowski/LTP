@@ -72,7 +72,7 @@ def create_features_table(
         return None
 
     true_features = [str(k) for k, v in kwargs.items() if v]
-    list_of_features = ["degree_sum", "shortest_paths", "edge_betweenness", "degree_centrality", "closeness", "local_clustering_coefficient", "pagerank", "eigenvector_centrality", "algebraic_distance", "diameter", "density", "preferential_attachment", "common_neighbor", "katz_index", "jaccard_index", "adjusted_rand", "adamic_adar", "local_degree_score", "local_similarity_score", "scan"]
+    list_of_features = ['atom_features',"degree_sum", "shortest_paths", "edge_betweenness", "degree_centrality", "closeness", "local_clustering_coefficient", "pagerank", "eigenvector_centrality", "algebraic_distance", "diameter", "density", "preferential_attachment", "common_neighbor", "katz_index", "jaccard_index", "adjusted_rand", "adamic_adar", "local_degree_score", "local_similarity_score", "scan"]
     dict_of_features = {k: False for k in list_of_features}
     df = pd.DataFrame() 
 
@@ -81,6 +81,7 @@ def create_features_table(
         dict_of_features[feature] = True
         filename = _get_file_name(
             dataset_name,
+            dict_of_features["atom_features"],
             dict_of_features["degree_sum"],
             dict_of_features["shortest_paths"],
             dict_of_features["edge_betweenness"],
@@ -116,47 +117,10 @@ def create_features_table(
     return df
 
     
-    # create dataframe, iterate through features, open files and add data
-    df = pd.DataFrame() # TODO
-    for feature in features.keys():
-        features[feature] = True
-        filename = _get_file_name(
-            features[dataset_name],
-            features[degree_sum],
-            features[shortest_paths],
-            features[edge_betweenness],
-            features[degree_centrality],
-            features[closeness],
-            features[local_clustering_coefficient],
-            features[pagerank],
-            features[eigenvector_centrality],
-            features[algebraic_distance],
-            features[diameter],
-            features[density],
-            features[preferential_attachment],
-            features[common_neighbor],
-            features[katz_index],
-            features[jaccard_index],
-            features[adjusted_rand],
-            features[adamic_adar],
-            features[local_degree_score],
-            features[local_similarity_score],
-            features[scan]
-        )
-        features[feature] = False
-        filepath = FEATURES_CACHE_DIR / filename
-
-        try:
-            feature_data = pd.read_pickle(filepath, compression="zstd")
-            df.append(feature_data) # TODO
-        except FileNotFoundError:
-            pass
-    return df
-
-
 def cache_features(
     features: pd.DataFrame,
     dataset_name: str,
+    atom_features: bool=False,
     degree_sum: bool = False,
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
@@ -182,6 +146,7 @@ def cache_features(
 
     filename = _get_file_name(
         dataset_name,
+        atom_features,
         degree_sum,
         shortest_paths,
         edge_betweenness,
@@ -212,6 +177,7 @@ def cache_features(
 
 def _get_file_name(
     dataset_name: str,
+    atom_features: bool=False,
     degree_sum: bool = False,
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
@@ -236,6 +202,7 @@ def _get_file_name(
     filename = "_".join(
         [
             dataset_name,
+            str(int(atom_features)),
             str(int(degree_sum)),
             str(int(shortest_paths)),
             str(int(edge_betweenness)),

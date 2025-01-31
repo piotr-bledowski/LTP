@@ -1,6 +1,7 @@
 from typing import Literal
 
 import joblib
+import torch.nn.functional as F
 import numpy as np
 import pandas as pd
 import torch
@@ -21,6 +22,7 @@ from descriptors import *
 
 def _extract_single_graph_features(
     data: Data,
+    atom_features: bool,
     degree_sum: bool,
     shortest_paths: bool,
     edge_betweenness: bool,
@@ -69,8 +71,10 @@ def _extract_single_graph_features(
         deg_sum = deg_sum.numpy()
         ldp_features.append(deg_sum)
 
+
     if any(
         [
+            atom_features,
             shortest_paths,
             edge_betweenness,
             degree_centrality,
@@ -95,6 +99,9 @@ def _extract_single_graph_features(
         graph = torch_geometric.utils.to_networkx(data, to_undirected=True)
         graph = nx2nk(graph)
         graph.indexEdges()
+
+    if atom_features:
+        ldp_features = add_atom_type_data(data, ldp_features)
 
     if shortest_paths:
         sp_lengths = calculate_shortest_paths(graph)
@@ -180,6 +187,7 @@ def _extract_single_graph_features(
 
 def extract_features(
     dataset: Dataset,
+    atom_features: bool = False,
     degree_sum: bool = False,
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
@@ -217,6 +225,7 @@ def extract_features(
     data = [
         _extract_single_graph_features(
             data,
+            atom_features,
             degree_sum,
             shortest_paths,
             edge_betweenness,
@@ -240,7 +249,6 @@ def extract_features(
         )
         for data in iterable
     ]
-
     columns = [
         "deg",
         "deg_min",
@@ -250,6 +258,8 @@ def extract_features(
     ]
     if degree_sum:
         columns.append("deg_sum")
+    if atom_features:
+        columns.append("atom_features")
     if shortest_paths:
         columns.append("shortest_paths")
     if edge_betweenness:
@@ -290,6 +300,28 @@ def extract_features(
         columns.append("scan_structural_similarity_score")
 
     return pd.DataFrame(data, columns=columns)
+
+def add_atom_type_data(data, ldp_features):
+    atom_features = data.x[:, 0]
+    atom_features = atom_features.long()
+    atom_features = F.one_hot(atom_features, 120).float()
+
+    atom_types_mean = torch.mean(atom_features, dim=0).numpy()
+    atom_types_std = torch.std(atom_features, dim=0).numpy()
+    atom_types_sum = torch.sum(atom_features, dim=0).numpy()
+
+    # in case of all-zero features standard deviation is NaN, we fill it with zeros
+    atom_types_std[np.isnan(atom_types_std)] = 0
+
+    atom_type_features = np.concatenate(
+        (
+            atom_types_mean,
+            atom_types_std,
+            atom_types_sum,
+        )
+    )
+    ldp_features.append(atom_type_features)
+    return ldp_features
 
 
 def process_row(
