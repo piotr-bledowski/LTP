@@ -169,6 +169,7 @@ def create_cached_features(datasets):
         Path("y").mkdir(exist_ok=True)
 
         params = {
+            'atom features': False,
             'degree sum': False,
             'shortest paths': False,
             'edge betweenness': False,
@@ -196,6 +197,7 @@ def create_cached_features(datasets):
                 params[feature_name] = True
                 extracted_data = extract_features(
                             dataset=dataset,
+                            atom_features=params['atom features'],
                             degree_sum=params['degree sum'],
                             shortest_paths=params['shortest paths'],
                             edge_betweenness=params['edge betweenness'],
@@ -217,11 +219,10 @@ def create_cached_features(datasets):
                             scan=params['scan'],
                             verbose=False,
                         )
-                print("Udało sie!!")
-                print(extracted_data.shape)
                 cache_features(
                     extracted_data,
                     dataset_name,
+                    params["atom features"],
                     params["degree sum"],
                     params["shortest paths"],
                     params["edge betweenness"],
@@ -258,6 +259,41 @@ if __name__ == "__main__":
     create_cached_features(datasets)
 
     for dataset_name in datasets:
+        print(dataset_name)
+        importances = perform_experiment_calculate_importance(
+            dataset_name=dataset_name,
+            verbose=False,
+            atom_features=True,
+            degree_sum=True,
+            shortest_paths=True,
+            edge_betweenness=True,
+            degree_centrality=True,
+            local_clustering_coefficient=True,
+            pagerank=True,
+            eigenvector_centrality=True,
+            algebraic_distance=True,
+            diameter=True,
+            density=True,
+            preferential_attachment=True,
+            common_neighbor=True,
+            katz_index=True,
+            jaccard_index=True,
+            adjusted_rand=True,
+            adamic_adar=True,
+            local_degree_score=True,
+            local_similarity_score=True,
+            scan=True,
+            plots_dir=plots_dir
+        )
+        all_feature_importances.append(importances)
+
+    df = pd.concat(all_feature_importances, ignore_index=True)
+    df = pd.DataFrame(df.mean(axis=0)).transpose()
+    df.index = [""]
+    df.to_pickle(plots_dir / "DD.pkl")
+    df.plot.bar(rot=0)
+    plt.tight_layout()
+    plt.savefig(plots_dir / "DD.pdf")
         best_params = {
             'degree sum': False,
             'shortest paths': False,

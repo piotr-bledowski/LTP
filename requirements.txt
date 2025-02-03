@@ -8,6 +8,7 @@ optuna
 pandas
 scikit-learn
 torch_scatter
+lightgbm
 tqdm
 wandb
 zstd
