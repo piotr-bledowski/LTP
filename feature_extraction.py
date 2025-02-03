@@ -64,6 +64,10 @@ def _extract_single_graph_features(
         deg_stddev.numpy(),
     ]
 
+    # Add node feature statistics
+    node_feature_stats = calculate_node_feature_statistics(data)
+    ldp_features.extend(node_feature_stats)
+
     if degree_sum:
         deg_sum = scatter_sum(deg_col, row, dim_size=N)
         deg_sum = deg_sum.numpy()
@@ -241,6 +245,7 @@ def extract_features(
         for data in iterable
     ]
 
+    # First get base columns
     columns = [
         "deg",
         "deg_min",
@@ -248,6 +253,15 @@ def extract_features(
         "deg_mean",
         "deg_stddev",
     ]
+    
+    # Add node feature statistics columns before other feature columns
+    if hasattr(dataset[0], 'x') and dataset[0].x is not None:
+        num_node_features = dataset[0].x.size(1)
+        for feat_idx in range(num_node_features):
+            for stat in ['mean', 'std', 'sum']:
+                columns.append(f"node_feat_{feat_idx}_{stat}")
+    
+    # Then add optional feature columns
     if degree_sum:
         columns.append("deg_sum")
     if shortest_paths:
@@ -310,11 +324,19 @@ def process_row(
         "deg_mean",
     ]
 
+    # Add node feature statistics to log_features
+    node_feat_prefixes = ["node_feat_"]
+    log_features.extend([col for col in columns if any(col.startswith(prefix) for prefix in node_feat_prefixes)])
+
     col_start = 0
     col_end = n_bins
 
     for col_idx, col_name in enumerate(columns):
         values = row[col_idx]
+        
+        # Convert scalar node feature statistics to arrays for histogram
+        if any(col_name.startswith(prefix) for prefix in node_feat_prefixes):
+            values = np.array([values])  # Convert scalar to 1-element array
 
         if log_degree is True and col_name in log_features:
             # add small value to avoid problems with degree 0
@@ -377,3 +399,28 @@ def calculate_features_matrix(
     X = np.stack(rows)
 
     return X
+
+
+def calculate_node_feature_statistics(data: Data) -> list[np.ndarray]:
+    """Calculate mean, std and sum for each node feature dimension"""
+    if not hasattr(data, 'x') or data.x is None:
+        return []
+        
+    # Convert to numpy for consistent handling
+    node_features = data.x.numpy()
+    
+    # Calculate statistics for each feature dimension
+    feature_means = np.mean(node_features, axis=0)
+    feature_stds = np.std(node_features, axis=0)
+    feature_sums = np.sum(node_features, axis=0)
+    
+    # Return each statistic for each feature separately
+    stats = []
+    for i in range(node_features.shape[1]):
+        stats.extend([
+            feature_means[i].astype(np.float32),
+            feature_stds[i].astype(np.float32),
+            feature_sums[i].astype(np.float32)
+        ])
+    
+    return stats

@@ -165,8 +165,9 @@ def save_node_num(dataset):
 
 def create_cached_features(datasets):
     # create cache table
-    if not os.path.exists('feat_cache') or len(os.listdir('feat_cache')) == 0:
+    if not os.path.exists('features_cache') or len(os.listdir('features_cache')) == 0:
         Path("y").mkdir(exist_ok=True)
+
         params = {
             'degree sum': False,
             'shortest paths': False,
@@ -254,7 +255,7 @@ if __name__ == "__main__":
     datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K']
     ldp_features = ['deg max', 'deg', 'deg min', 'deg mean', 'deg stddev']
 
-    #create_cached_features(datasets)
+    create_cached_features(datasets)
 
     for dataset_name in datasets:
         best_params = {
@@ -337,7 +338,7 @@ if __name__ == "__main__":
 
         os.makedirs('results', exist_ok=True)
 
-        with open(os.path.join('results', f'{dataset_name}_best_features_single_cache_SVM.pkl'), 'wb') as f:
+        with open(os.path.join('results', f'{dataset_name}_best_features_single_cache_RF.pkl'), 'wb') as f:
             pickle.dump(best_params, f)
 
     # all_feature_importances = []

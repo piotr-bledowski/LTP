@@ -4,7 +4,7 @@ from typing import Optional
 
 import pandas as pd
 
-FEATURES_CACHE_DIR = Path("f_cache")
+FEATURES_CACHE_DIR = Path("features_cache")
 
 
 def try_loading_cached_features(
