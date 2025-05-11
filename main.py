@@ -169,7 +169,6 @@ def create_cached_features(datasets):
         Path("y").mkdir(exist_ok=True)
 
         params = {
-            'atom features': False,
             'degree sum': False,
             'shortest paths': False,
             'edge betweenness': False,
@@ -197,7 +196,6 @@ def create_cached_features(datasets):
                 params[feature_name] = True
                 extracted_data = extract_features(
                             dataset=dataset,
-                            atom_features=params['atom features'],
                             degree_sum=params['degree sum'],
                             shortest_paths=params['shortest paths'],
                             edge_betweenness=params['edge betweenness'],
@@ -222,7 +220,6 @@ def create_cached_features(datasets):
                 cache_features(
                     extracted_data,
                     dataset_name,
-                    params["atom features"],
                     params["degree sum"],
                     params["shortest paths"],
                     params["edge betweenness"],
@@ -263,7 +260,6 @@ if __name__ == "__main__":
     #     importances = perform_experiment_calculate_importance(
     #         dataset_name=dataset_name,
     #         verbose=False,
-    #         atom_features=True,
     #         degree_sum=True,
     #         shortest_paths=True,
     #         edge_betweenness=True,
@@ -318,55 +314,51 @@ if __name__ == "__main__":
             'scan': False,
         }
 
+        descriptors = list(best_params.keys())
+
         best_acc = 0
         best_acc_std = 0
 
         start = time()
 
-        with open(os.path.join('plots', 'feature_importance', f'{dataset_name}.pkl'), 'rb') as handle:
-            b = pickle.load(handle)
-            d = b.to_dict('records')[0]
-            d = sorted(d.items(), key=lambda x: x[1], reverse=True)
 
-            imp = [x for x in d if x[0] not in ldp_features]
+        for i in range(len(descriptors)):
+            params = best_params.copy()
+            next_descriptor = descriptors[i]
+            params[next_descriptor] = True
 
-            for i in range(len(imp)):
-                params = best_params.copy()
-                next_descriptor = imp[i][0]
-                params[next_descriptor] = True
+            acc_mean, acc_std = perform_experiment(
+                model_type='RandomForest',
+                dataset_name=dataset_name,
+                verbose=False,
+                degree_sum=params['degree sum'],
+                shortest_paths=params['shortest paths'],
+                edge_betweenness=params['edge betweenness'],
+                degree_centrality=params['degree centrality'],
+                local_clustering_coefficient=params['local clustering coefficient'],
+                pagerank=params['pagerank'],
+                eigenvector_centrality=params['eigenvector centrality'],
+                algebraic_distance=params['algebraic distance'],
+                diameter=params['diameter'],
+                density=params['density'],
+                preferential_attachment=params['preferential attachment'],
+                common_neighbor=params['common neighbor'],
+                katz_index=params['katz index'],
+                jaccard_index=params['jaccard index'],
+                adjusted_rand=params['adjusted rand'],
+                adamic_adar=params['adamic adar'],
+                local_degree_score=params['local degree score'],
+                local_similarity_score=params['local similarity score'],
+                scan=params['scan'],
+                plots_dir=plots_dir
+            )
 
-                acc_mean, acc_std = perform_experiment(
-                    model_type='RandomForest',
-                    dataset_name=dataset_name,
-                    verbose=False,
-                    degree_sum=params['degree sum'],
-                    shortest_paths=params['shortest paths'],
-                    edge_betweenness=params['edge betweenness'],
-                    degree_centrality=params['degree centrality'],
-                    local_clustering_coefficient=params['local clustering coefficient'],
-                    pagerank=params['pagerank'],
-                    eigenvector_centrality=params['eigenvector centrality'],
-                    algebraic_distance=params['algebraic distance'],
-                    diameter=params['diameter'],
-                    density=params['density'],
-                    preferential_attachment=params['preferential attachment'],
-                    common_neighbor=params['common neighbor'],
-                    katz_index=params['katz index'],
-                    jaccard_index=params['jaccard index'],
-                    adjusted_rand=params['adjusted rand'],
-                    adamic_adar=params['adamic adar'],
-                    local_degree_score=params['local degree score'],
-                    local_similarity_score=params['local similarity score'],
-                    scan=params['scan'],
-                    plots_dir=plots_dir
-                )
-
-                if acc_mean > best_acc:
-                    best_acc = acc_mean
-                    best_params = params
-                    best_acc_std = acc_std
-                    true_best_params = [k for k, v in best_params.items() if v]
-                    print(true_best_params)
+            if acc_mean > best_acc:
+                best_acc = acc_mean
+                best_params = params
+                best_acc_std = acc_std
+                true_best_params = [k for k, v in best_params.items() if v]
+                print(true_best_params)
 
         total_time = round(time() - start, 2)
 

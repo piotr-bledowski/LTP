@@ -22,7 +22,6 @@ from descriptors import *
 
 def _extract_single_graph_features(
     data: Data,
-    atom_features: bool,
     degree_sum: bool,
     shortest_paths: bool,
     edge_betweenness: bool,
@@ -78,7 +77,6 @@ def _extract_single_graph_features(
 
     if any(
         [
-            atom_features,
             shortest_paths,
             edge_betweenness,
             degree_centrality,
@@ -103,9 +101,6 @@ def _extract_single_graph_features(
         graph = torch_geometric.utils.to_networkx(data, to_undirected=True)
         graph = nx2nk(graph)
         graph.indexEdges()
-
-    if atom_features:
-        ldp_features = add_atom_type_data(data, ldp_features)
 
     if shortest_paths:
         sp_lengths = calculate_shortest_paths(graph)
@@ -191,7 +186,6 @@ def _extract_single_graph_features(
 
 def extract_features(
     dataset: Dataset,
-    atom_features: bool = False,
     degree_sum: bool = False,
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
@@ -229,7 +223,6 @@ def extract_features(
     data = [
         _extract_single_graph_features(
             data,
-            atom_features,
             degree_sum,
             shortest_paths,
             edge_betweenness,
@@ -267,14 +260,13 @@ def extract_features(
     if hasattr(dataset[0], 'x') and dataset[0].x is not None:
         num_node_features = dataset[0].x.size(1)
         for feat_idx in range(num_node_features):
-            for stat in ['mean', 'std', 'sum']:
+            # for stat in ['mean', 'std', 'sum']:
+            for stat in ['sum']:
                 columns.append(f"node_feat_{feat_idx}_{stat}")
     
     # Then add optional feature columns
     if degree_sum:
         columns.append("deg_sum")
-    if atom_features:
-        columns.append("atom_features")
     if shortest_paths:
         columns.append("shortest_paths")
     if edge_betweenness:
@@ -315,29 +307,6 @@ def extract_features(
         columns.append("scan_structural_similarity_score")
 
     return pd.DataFrame(data, columns=columns)
-
-def add_atom_type_data(data, ldp_features):
-    atom_features = data.x[:, 0]
-    atom_features = atom_features.long()
-    atom_features = F.one_hot(atom_features, 120).float()
-
-    atom_types_mean = torch.mean(atom_features, dim=0).numpy()
-    atom_types_std = torch.std(atom_features, dim=0).numpy()
-    atom_types_sum = torch.sum(atom_features, dim=0).numpy()
-
-    # in case of all-zero features standard deviation is NaN, we fill it with zeros
-    atom_types_std[np.isnan(atom_types_std)] = 0
-
-    atom_type_features = np.concatenate(
-        (
-            atom_types_mean,
-            atom_types_std,
-            atom_types_sum,
-        )
-    )
-    ldp_features.append(atom_type_features)
-    return ldp_features
-
 
 def process_row(
     row,
@@ -443,16 +412,16 @@ def calculate_node_feature_statistics(data: Data) -> list[np.ndarray]:
     node_features = data.x.numpy()
     
     # Calculate statistics for each feature dimension
-    feature_means = np.mean(node_features, axis=0)
-    feature_stds = np.std(node_features, axis=0)
+    # feature_means = np.mean(node_features, axis=0)
+    # feature_stds = np.std(node_features, axis=0)
     feature_sums = np.sum(node_features, axis=0)
     
     # Return each statistic for each feature separately
     stats = []
     for i in range(node_features.shape[1]):
         stats.extend([
-            feature_means[i].astype(np.float32),
-            feature_stds[i].astype(np.float32),
+            # feature_means[i].astype(np.float32),
+            # feature_stds[i].astype(np.float32),
             feature_sums[i].astype(np.float32)
         ])
     

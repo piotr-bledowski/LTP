@@ -72,7 +72,7 @@ def create_features_table(
         return None
 
     true_features = [str(k) for k, v in kwargs.items() if v]
-    list_of_features = ['atom_features',"degree_sum", "shortest_paths", "edge_betweenness", "degree_centrality", "closeness", "local_clustering_coefficient", "pagerank", "eigenvector_centrality", "algebraic_distance", "diameter", "density", "preferential_attachment", "common_neighbor", "katz_index", "jaccard_index", "adjusted_rand", "adamic_adar", "local_degree_score", "local_similarity_score", "scan"]
+    list_of_features = ["degree_sum", "shortest_paths", "edge_betweenness", "degree_centrality", "closeness", "local_clustering_coefficient", "pagerank", "eigenvector_centrality", "algebraic_distance", "diameter", "density", "preferential_attachment", "common_neighbor", "katz_index", "jaccard_index", "adjusted_rand", "adamic_adar", "local_degree_score", "local_similarity_score", "scan"]
     dict_of_features = {k: False for k in list_of_features}
     df = pd.DataFrame() 
 
@@ -81,7 +81,6 @@ def create_features_table(
         dict_of_features[feature] = True
         filename = _get_file_name(
             dataset_name,
-            dict_of_features["atom_features"],
             dict_of_features["degree_sum"],
             dict_of_features["shortest_paths"],
             dict_of_features["edge_betweenness"],
@@ -120,7 +119,6 @@ def create_features_table(
 def cache_features(
     features: pd.DataFrame,
     dataset_name: str,
-    atom_features: bool=False,
     degree_sum: bool = False,
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
@@ -146,7 +144,6 @@ def cache_features(
 
     filename = _get_file_name(
         dataset_name,
-        atom_features,
         degree_sum,
         shortest_paths,
         edge_betweenness,
@@ -177,7 +174,6 @@ def cache_features(
 
 def _get_file_name(
     dataset_name: str,
-    atom_features: bool=False,
     degree_sum: bool = False,
     shortest_paths: bool = False,
     edge_betweenness: bool = False,
@@ -202,7 +198,6 @@ def _get_file_name(
     filename = "_".join(
         [
             dataset_name,
-            str(int(atom_features)),
             str(int(degree_sum)),
             str(int(shortest_paths)),
             str(int(edge_betweenness)),
