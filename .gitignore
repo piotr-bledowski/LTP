@@ -1,2 +1,6 @@
 venv
 wandb
+features_cache
+results
+y
+datasets

@@ -1,5 +1,6 @@
 from sklearn.model_selection import GridSearchCV
 from xgboost import XGBClassifier
+import lightgbm as lgb
 
 # use Intel Extensions for Scikit-learn, if they are available
 try:
@@ -50,12 +51,15 @@ def get_model(
     elif model_type == "XGBClassifier":
         model = XGBClassifier(
             n_estimators=500,
-            max_depth=5,
             learning_rate=0.1,
             n_jobs=-1,
             random_state=0,
         )
         # we do not perform hyperparameter tuning for XGB
+        params_grid = {}
+    elif model_type == "LightGBM":
+        model = lgb.LGBMClassifier()
+        # we do not perform hyperparameter tuning for LightGBM
         params_grid = {}
     else:
         raise ValueError(f"Model type '{model_type}' not supported")
