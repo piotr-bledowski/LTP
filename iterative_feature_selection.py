@@ -6,6 +6,7 @@ from typing import Dict, List, Tuple, Optional
 import numpy as np
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import cross_val_score
 
 from perform_experiment import perform_experiment
 from caching import create_features_table
@@ -171,6 +172,9 @@ def _single_iterative_selection_split(
     """
     Run a single iteration of the iterative feature selection process on a specific split.
     
+    IMPORTANT: This function now uses cross-validation on ONLY the training data
+    to select features, keeping the test set completely separate until final evaluation.
+    
     Returns:
         Dictionary with results from this single split
     """
@@ -197,8 +201,12 @@ def _single_iterative_selection_split(
         "log_degree": False,
     }
     
-    # Helper function to evaluate a feature set on this split
-    def evaluate_feature_set(feature_params: Dict[str, bool]) -> float:
+    # Helper function to evaluate a feature set using cross-validation on TRAINING DATA ONLY
+    def evaluate_feature_set_cv(feature_params: Dict[str, bool]) -> float:
+        """
+        Evaluate feature set using cross-validation on training data only.
+        This prevents data leakage by keeping test set completely separate.
+        """
         # Get features with the specified configuration
         features = create_features_table(dataset_name, **feature_params)
         if features is None:
@@ -206,7 +214,45 @@ def _single_iterative_selection_split(
             from feature_extraction import extract_features
             features = extract_features(dataset, **feature_params, verbose=False)
         
-        # Split features
+        # Use ONLY training data for feature selection
+        features_train = features.iloc[train_idxs, :]
+        
+        # Calculate feature matrices for training data only
+        X_train = calculate_features_matrix(features_train, **ldp_params)
+        
+        # Normalize features for SVM models (fit on training data only)
+        if model_type in ['LinearSVM', 'KernelSVM']:
+            scaler = StandardScaler()
+            X_train = scaler.fit_transform(X_train)
+        
+        # Perform cross-validation on training data only to evaluate feature set
+        model = get_model(model_type=model_type, verbose=False)
+        
+        # Use 5-fold cross-validation on training data
+        cv_scores = cross_val_score(
+            model, X_train, y_train, 
+            cv=5,  # 5-fold cross-validation
+            scoring='accuracy',
+            n_jobs=1  # Avoid nested parallelization issues
+        )
+        
+        # Return mean cross-validation score
+        return np.mean(cv_scores)
+    
+    # Helper function to evaluate final selected features on test set (for final evaluation only)
+    def evaluate_on_test_set(feature_params: Dict[str, bool]) -> float:
+        """
+        Evaluate the final selected feature set on the test set.
+        This should ONLY be called once at the end for final evaluation.
+        """
+        # Get features with the specified configuration
+        features = create_features_table(dataset_name, **feature_params)
+        if features is None:
+            # Extract features if not cached
+            from feature_extraction import extract_features
+            features = extract_features(dataset, **feature_params, verbose=False)
+        
+        # Split features into train and test
         features_train = features.iloc[train_idxs, :]
         features_test = features.iloc[test_idxs, :]
         
@@ -220,35 +266,38 @@ def _single_iterative_selection_split(
             X_train = scaler.fit_transform(X_train)
             X_test = scaler.transform(X_test)
         
-        # Train model and evaluate
+        # Train model on full training set and evaluate on test set
         model = get_model(model_type=model_type, verbose=False)
         model.fit(X_train, y_train)
         y_pred = model.predict(X_test)
         return accuracy_score(y_test, y_pred)
     
-    # Evaluate baseline with only base features
+    # Evaluate baseline with only base features using cross-validation
     baseline_params = {feature: False for feature in TOPOLOGICAL_FEATURES}
-    baseline_acc = evaluate_feature_set(baseline_params)
+    baseline_acc_cv = evaluate_feature_set_cv(baseline_params)
     
-    best_acc = baseline_acc
+    best_acc_cv = baseline_acc_cv
     iteration = 1
     
     # Track history for this split
     selection_history = []
     selection_history.append({
         'features': list(selected_features),
-        'accuracy': baseline_acc,
+        'accuracy_cv': baseline_acc_cv,
         'improvement': 0.0
     })
+    
+    if verbose:
+        print(f"  Baseline CV accuracy: {baseline_acc_cv:.4f}")
     
     while remaining_features and (max_features is None or len(selected_features) < max_features):
         if verbose:
             print(f"  Iteration {iteration}: Testing {len(remaining_features)} remaining features")
         
         best_candidate = None
-        best_candidate_acc = best_acc
+        best_candidate_acc_cv = best_acc_cv
         
-        # Test each remaining feature
+        # Test each remaining feature using cross-validation on training data only
         for feature in remaining_features:
             if verbose:
                 print(f"    Testing feature: {feature}")
@@ -259,37 +308,37 @@ def _single_iterative_selection_split(
                 test_params[selected_feature] = True
             test_params[feature] = True
             
-            # Evaluate with this feature set
-            acc = evaluate_feature_set(test_params)
+            # Evaluate with this feature set using cross-validation
+            acc_cv = evaluate_feature_set_cv(test_params)
             
             if verbose:
-                improvement = acc - best_acc
-                print(f"      Accuracy: {acc:.4f} (improvement: {improvement:+.4f})")
+                improvement = acc_cv - best_acc_cv
+                print(f"      CV Accuracy: {acc_cv:.4f} (improvement: {improvement:+.4f})")
             
             # Check if this is the best candidate so far
-            if acc > best_candidate_acc:
+            if acc_cv > best_candidate_acc_cv:
                 best_candidate = feature
-                best_candidate_acc = acc
+                best_candidate_acc_cv = acc_cv
         
         # Check if best candidate provides sufficient improvement
-        improvement = best_candidate_acc - best_acc
+        improvement = best_candidate_acc_cv - best_acc_cv
         
         if improvement >= min_improvement:
             # Add the best candidate to selected features
             selected_features.add(best_candidate)
             remaining_features.remove(best_candidate)
-            best_acc = best_candidate_acc
+            best_acc_cv = best_candidate_acc_cv
             
             selection_history.append({
                 'features': list(selected_features),
-                'accuracy': best_acc,
+                'accuracy_cv': best_acc_cv,
                 'improvement': improvement,
                 'added_feature': best_candidate
             })
             
             if verbose:
                 print(f"    ✓ Added feature: {best_candidate}")
-                print(f"      New best accuracy: {best_acc:.4f} (improvement: {improvement:+.4f})")
+                print(f"      New best CV accuracy: {best_acc_cv:.4f} (improvement: {improvement:+.4f})")
         else:
             if verbose:
                 print(f"    ✗ No feature provides sufficient improvement (best: {improvement:+.4f} < {min_improvement})")
@@ -297,11 +346,28 @@ def _single_iterative_selection_split(
         
         iteration += 1
     
+    # NOW evaluate the final selected features on the test set (this is the only time we touch test data)
+    final_params = {f: False for f in TOPOLOGICAL_FEATURES}
+    for feature in selected_features:
+        final_params[feature] = True
+    
+    final_test_accuracy = evaluate_on_test_set(final_params)
+    baseline_test_accuracy = evaluate_on_test_set(baseline_params)
+    
+    if verbose:
+        print(f"  Final evaluation on test set:")
+        print(f"    Selected features test accuracy: {final_test_accuracy:.4f}")
+        print(f"    Baseline test accuracy: {baseline_test_accuracy:.4f}")
+        print(f"    Test set improvement: {final_test_accuracy - baseline_test_accuracy:+.4f}")
+    
     return {
         'selected_features': selected_features,
-        'final_accuracy': best_acc,
-        'baseline_acc': baseline_acc,
-        'improvement': best_acc - baseline_acc,
+        'final_accuracy': final_test_accuracy,  # Test set accuracy with selected features
+        'baseline_acc': baseline_test_accuracy,  # Test set accuracy with baseline features
+        'final_cv_accuracy': best_acc_cv,  # Cross-validation accuracy used for selection
+        'baseline_cv_accuracy': baseline_acc_cv,  # Cross-validation baseline accuracy
+        'improvement': final_test_accuracy - baseline_test_accuracy,
+        'cv_improvement': best_acc_cv - baseline_acc_cv,
         'iterations': iteration - 1,
         'selection_history': selection_history
     }
