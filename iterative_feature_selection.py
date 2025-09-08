@@ -289,13 +289,15 @@ def _single_iterative_selection_split(
     
     if verbose:
         print(f"  Baseline CV accuracy: {baseline_acc_cv:.4f}")
-    
+
+    min_features = 3
+
     while remaining_features and (max_features is None or len(selected_features) < max_features):
         if verbose:
             print(f"  Iteration {iteration}: Testing {len(remaining_features)} remaining features")
         
         best_candidate = None
-        best_candidate_acc_cv = best_acc_cv
+        best_candidate_acc_cv = -np.inf
         
         # Test each remaining feature using cross-validation on training data only
         for feature in remaining_features:
@@ -322,9 +324,8 @@ def _single_iterative_selection_split(
         
         # Check if best candidate provides sufficient improvement
         improvement = best_candidate_acc_cv - best_acc_cv
-        
-        if improvement >= min_improvement:
-            # Add the best candidate to selected features
+
+        if improvement >= min_improvement or len(selected_features) < min_features:            # Add the best candidate to selected features
             selected_features.add(best_candidate)
             remaining_features.remove(best_candidate)
             best_acc_cv = best_candidate_acc_cv
@@ -337,8 +338,11 @@ def _single_iterative_selection_split(
             })
             
             if verbose:
-                print(f"    ✓ Added feature: {best_candidate}")
-                print(f"      New best CV accuracy: {best_acc_cv:.4f} (improvement: {improvement:+.4f})")
+                if improvement >= min_improvement:
+                    print(f"    ✓ Added feature: {best_candidate}")
+                    print(f"      New best CV accuracy: {best_acc_cv:.4f} (improvement: {improvement:+.4f})")
+                else:
+                    print(f"    • Added feature: {best_candidate} (insufficient improvement {improvement:+.4f})")
         else:
             if verbose:
                 print(f"    ✗ No feature provides sufficient improvement (best: {improvement:+.4f} < {min_improvement})")

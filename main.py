@@ -56,7 +56,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--iterative_feature_selection",
         type=ensure_bool,
-        default=False,
+        default=True,
         help="Use iterative feature selection instead of importance-based selection?",
     )
     parser.add_argument(
