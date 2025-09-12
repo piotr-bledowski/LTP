@@ -16,6 +16,18 @@ DATASET_NAMES = [
     "REDDIT-BINARY",
     "REDDIT-MULTI-5K",
     "COLLAB",
+    "AIDS",
+    "BZR",
+    "COIL-DEL",
+    "COIL-RAG",
+    "COX2",  # poprawiona literówka zamiast COS2
+    "DHFR",
+    "FRANKENSTEIN",
+    "Letter-high",
+    "Letter-med",
+    "Letter-low",
+    "MCF-7",
+    "Mutagenicity",
 ]
 
 

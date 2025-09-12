@@ -49,6 +49,18 @@ def parse_args() -> argparse.Namespace:
             "REDDIT-BINARY",
             "REDDIT-MULTI-5K",
             "COLLAB",
+            "AIDS",
+            "BZR",
+            "COIL-DEL",
+            "COIL-RAG",
+            "COX2",  # poprawiona literówka zamiast COS2
+            "DHFR",
+            "FRANKENSTEIN",
+            "Letter-high",
+            "Letter-med",
+            "Letter-low",
+            "MCF-7",
+            "Mutagenicity",
         ],
         default="all",
         help="Dataset name, use 'all' to run the entire benchmark.",
@@ -240,7 +252,18 @@ if __name__ == "__main__":
     plots_dir.mkdir(parents=True, exist_ok=True)
     args = parse_args()
 
-    datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K', 'COLLAB']
+    datasets = ['DD', 'NCI1', 'PROTEINS_full', 'ENZYMES', 'IMDB-BINARY', 'IMDB-MULTI', 'REDDIT-BINARY', 'REDDIT-MULTI-5K', 'COLLAB',"AIDS",
+    "BZR",
+    "COIL-DEL",
+    "COIL-RAG",
+    "COX2",           # poprawiona literówka zamiast COS2
+    "DHFR",
+    "FRANKENSTEIN",
+    "Letter-high",
+    "Letter-med",
+    "Letter-low",
+    "MCF-7",
+    "Mutagenicity",]
     ldp_features = ['deg max', 'deg', 'deg min', 'deg mean', 'deg stddev']
 
     #create_cached_features(datasets)
