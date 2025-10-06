@@ -28,6 +28,8 @@ DATASET_NAMES = [
     "Letter-low",
     "MCF-7",
     "Mutagenicity",
+    "Cuneiform",
+    "Fingerprint"
 ]
 
 
